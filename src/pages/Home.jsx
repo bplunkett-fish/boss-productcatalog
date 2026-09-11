@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Package, LogOut, Database } from "lucide-react";
 import SerialLookup from "@/components/SerialLookup";
+import ManualSearch from "@/components/ManualSearch";
 import CatalogGrid from "@/components/CatalogGrid";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -12,6 +13,7 @@ export default function Home() {
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [mode, setMode] = useState("serial");
 
   const loadCatalog = useCallback(async () => {
     try {
@@ -85,10 +87,35 @@ export default function Home() {
             Look up a product
           </h1>
           <p className="text-slate-500 mt-2 max-w-xl">
-            Enter a serial number to match it to a model in SAGE ERP. Matching products can be added to your personal catalog with full manuals, diagrams, videos, and parts.
+            Look up a product by serial number, or search the product database by model to view its manuals, diagrams, videos, and parts — then add it to your personal catalog.
           </p>
+
+          {/* Mode toggle */}
+          <div className="mt-6 inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200">
+            <button
+              onClick={() => setMode("serial")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                mode === "serial" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              Serial lookup
+            </button>
+            <button
+              onClick={() => setMode("manual")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                mode === "manual" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              Manual search
+            </button>
+          </div>
+
           <div className="mt-6">
-            <SerialLookup onAdded={loadCatalog} />
+            {mode === "serial" ? (
+              <SerialLookup onAdded={loadCatalog} />
+            ) : (
+              <ManualSearch onAdded={loadCatalog} />
+            )}
           </div>
         </section>
 
