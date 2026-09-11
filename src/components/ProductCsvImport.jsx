@@ -33,7 +33,7 @@ export default function ProductCsvImport() {
           <FileSpreadsheet className="w-5 h-5 text-slate-500" />
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-slate-900">Import models from CSV</p>
+          <p className="font-semibold text-slate-900">Import models from CSV or Excel</p>
           <p className="text-sm text-slate-500 mt-1">
             Bulk-load model-level records into the Product Database. Required columns:{" "}
             <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">model_number, product_name</span>

@@ -52,9 +52,15 @@ export default async function(req) {
       }
     });
 
-    const raw = Array.isArray(extracted?.output) ? extracted.output
-      : Array.isArray(extracted?.output?.rows) ? extracted.output.rows
-      : [];
+    // Normalize the extractor output. CSV returns a flat array; xlsx may return
+    // { rows } / { data } or a sheet-keyed object whose values are arrays.
+    const out = extracted?.output;
+    const raw = Array.isArray(out) ? out
+      : Array.isArray(out?.rows) ? out.rows
+      : Array.isArray(out?.data) ? out.data
+      : (out && typeof out === 'object' && Object.values(out).some(Array.isArray)
+          ? Object.values(out).filter(Array.isArray).flat()
+          : []);
 
     const cleaned = raw
       .map(r => ({
