@@ -9,39 +9,14 @@
     "model_number": {
       "type": "string",
       "title": "Model Number"
-    },
-    "product_name": {
-      "type": "string",
-      "title": "Product Name"
-    },
-    "product_description": {
-      "type": "string",
-      "title": "Product Description"
-    },
-    "category": {
-      "type": "string",
-      "title": "Category"
-    },
-    "manufacturer": {
-      "type": "string",
-      "title": "Manufacturer"
-    },
-    "image_url": {
-      "type": "string",
-      "title": "Image URL",
-      "format": "uri"
     }
   },
   "required": [
     "serial_number",
-    "product_name"
+    "model_number"
   ],
   "rls": {
-    "read": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
+    "read": {},
     "create": {
       "user_condition": {
         "role": "admin"
