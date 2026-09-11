@@ -98,7 +98,7 @@ export default async function(req) {
     // TODO: push `registration` to the external warranty database.
     // await pushToExternalWarrantyDb(registration);
 
-    return Response.json({ status: 'ok', recipient });
+    return Response.json({ status: 'ok' });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
