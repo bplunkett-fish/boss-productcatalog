@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, ExternalLink, Download, ChevronDown } from "lucide-react";
+import { FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, ExternalLink, Download, ChevronDown, BookOpen } from "lucide-react";
 
 const TABS = [
   { key: "manuals", label: "Manuals", icon: FileText },
+  { key: "literature", label: "Literature", icon: BookOpen },
   { key: "wiring_diagrams", label: "Wiring Diagrams", icon: Cable },
   { key: "videos", label: "Videos", icon: Video },
   { key: "faqs", label: "FAQs", icon: HelpCircle },
@@ -58,6 +59,7 @@ export default function ResourceTabs({ product }) {
       {/* Tab content */}
       <div className="min-h-[200px]">
         {current.key === "manuals" && <ManualList items={items} />}
+        {current.key === "literature" && <LiteratureList items={items} />}
         {current.key === "wiring_diagrams" && <DiagramList items={items} />}
         {current.key === "videos" && <VideoList items={items} />}
         {current.key === "faqs" && <FaqList items={items} />}
@@ -213,6 +215,31 @@ function PartsList({ items }) {
             <span className="font-semibold text-foreground shrink-0">${p.price.toFixed(2)}</span>
           )}
           <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function LiteratureList({ items }) {
+  return (
+    <div className="grid gap-3">
+      {items.map((m, i) => (
+        <a
+          key={i}
+          href={m.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-foreground/20 hover:bg-muted transition-colors group"
+        >
+          <div className="w-11 h-11 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5 text-amber-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-foreground truncate">{m.title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{m.file_type || "Document"}</p>
+          </div>
+          <Download className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
         </a>
       ))}
     </div>
