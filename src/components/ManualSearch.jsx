@@ -20,20 +20,26 @@ export default function ManualSearch({ onAdded }) {
   const [error, setError] = useState("");
   const resultsRef = useRef(null);
 
-  // Debounced server-side search: loads a bounded set (not 500) and filters
-  // client-side, keeping the same match semantics across model/name/category/manufacturer.
+  // Debounced server-side search: sends the query to the database and matches
+  // across model/name/category/manufacturer.
   const runSearch = useCallback(async (q) => {
     setLoading(true);
     setError("");
     try {
-      const all = await base44.entities.Product.list("-updated_date", SEARCH_LIMIT);
-      const ql = q.trim().toLowerCase();
+      const ql = q.trim();
       const matches = !ql
-        ? all
-        : all.filter((p) =>
-            [p.model_number, p.product_name, p.category, p.manufacturer]
-              .filter(Boolean)
-              .some((v) => v.toLowerCase().includes(ql))
+        ? await base44.entities.Product.list("-updated_date", SEARCH_LIMIT)
+        : await base44.entities.Product.filter(
+            {
+              $or: [
+                { model_number: { $regex: ql, $options: "i" } },
+                { product_name: { $regex: ql, $options: "i" } },
+                { category: { $regex: ql, $options: "i" } },
+                { manufacturer: { $regex: ql, $options: "i" } },
+              ],
+            },
+            "-updated_date",
+            SEARCH_LIMIT
           );
       setResults(matches);
       resultsRef.current = matches;

@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -155,6 +155,15 @@ export default function Settings() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </section>
+
+        {/* Sign out */}
+        <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-1">Sign out</h2>
+          <p className="text-sm text-muted-foreground mb-4">End your session on this device.</p>
+          <Button variant="outline" className="min-h-11" onClick={() => base44.auth.logout()}>
+            <LogOut className="w-4 h-4 mr-2" /> Sign out
+          </Button>
         </section>
       </main>
     </div>

@@ -19,13 +19,14 @@ export default function Home() {
 
   const loadCatalog = useCallback(async () => {
     try {
-      const list = await base44.entities.CatalogItem.list("-created_date", 100);
-      const models = [...new Set(list.map(i => i.model_number).filter(Boolean))];
+      // Fetch the catalog and the product database in parallel, then join by
+      // model_number client-side.
+      const [list, products] = await Promise.all([
+        base44.entities.CatalogItem.list("-created_date", 100),
+        base44.entities.Product.list("-updated_date", 200),
+      ]);
       const productMap = {};
-      if (models.length > 0) {
-        const products = await base44.entities.Product.filter({ model_number: { $in: models } }, "-updated_date", 200);
-        for (const p of products) productMap[p.model_number] = p;
-      }
+      for (const p of products) productMap[p.model_number] = p;
       setItems(list.map(i => ({ ...i, product: productMap[i.model_number] || null })));
     } catch (err) {
       setItems([]);
@@ -92,10 +93,10 @@ export default function Home() {
                 <Link to="/product-database"><Database className="w-4 h-4 mr-2" /> Product database</Link>
               </Button>
             )}
-            <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" aria-label="Settings">
+            <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden md:inline-flex" aria-label="Settings">
               <Link to="/settings"><SettingsIcon className="w-4 h-4 md:mr-2" /><span className="hidden md:inline">Settings</span></Link>
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground" aria-label="Sign out">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground hidden md:inline-flex" aria-label="Sign out">
               <LogOut className="w-4 h-4 md:mr-2" /><span className="hidden md:inline">Sign out</span>
             </Button>
           </div>

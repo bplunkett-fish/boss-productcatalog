@@ -11,10 +11,11 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
-import Home from '@/pages/Home';
+// Home is lazy-loaded below.
 import TabBar from '@/components/TabBar';
 
 // Lazy-loaded routes (code-splitting for performance).
+const Home = lazy(() => import('@/pages/Home'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
@@ -72,7 +73,7 @@ function AnimatedRoutes() {
         <Route path="/reset-password" element={<Suspense fallback={<Spinner />}><ResetPassword /></Suspense>} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Page><Home /></Page>} />
+            <Route path="/" element={<Suspense fallback={<Spinner />}><Page><Home /></Page></Suspense>} />
             <Route path="/product/:id" element={<Suspense fallback={<Spinner />}><Page><ProductDetail /></Page></Suspense>} />
             <Route path="/product-database" element={<Suspense fallback={<Spinner />}><Page><ProductDatabase /></Page></Suspense>} />
             <Route path="/settings" element={<Suspense fallback={<Spinner />}><Page><Settings /></Page></Suspense>} />
