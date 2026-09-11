@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Package } from "lucide-react";
@@ -9,6 +9,11 @@ import PullToRefresh from "@/components/PullToRefresh";
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const goBack = () => {
+    if (window.history.state?.idx > 0) navigate(-1);
+    else navigate("/");
+  };
   const [item, setItem] = useState(null);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,8 +55,8 @@ export default function ProductDetail() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center pb-28">
         <p className="text-lg font-semibold text-foreground">Product not found</p>
         <p className="text-sm text-muted-foreground mt-1">This item may have been removed from your catalog.</p>
-        <Button asChild className="mt-6">
-          <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link>
+        <Button className="mt-6" onClick={goBack}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog
         </Button>
       </div>
     );
@@ -67,8 +72,8 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 md:top-14 z-10 bg-card/80 backdrop-blur-md border-b border-border pt-safe">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-          <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link>
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={goBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog
           </Button>
         </div>
       </header>

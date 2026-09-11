@@ -110,3 +110,16 @@
   .mb-safe { margin-bottom: max(env(safe-area-inset-bottom), 0px); }
   .min-h-safe-top { min-height: env(safe-area-inset-top); }
 }
+
+/* Mobile-only: hide browser scrollbars for a native feel. Desktop keeps them. */
+@media (max-width: 767px) {
+  html, body, * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}

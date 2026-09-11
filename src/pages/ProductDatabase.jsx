@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,11 @@ import PullToRefresh from "@/components/PullToRefresh";
 
 export default function ProductDatabase() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const goBack = () => {
+    if (window.history.state?.idx > 0) navigate(-1);
+    else navigate("/");
+  };
   const [products, setProducts] = useState(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -37,7 +42,7 @@ export default function ProductDatabase() {
         <ShieldAlert className="w-10 h-10 text-amber-500 mb-3" />
         <p className="text-lg font-semibold text-foreground">Admins only</p>
         <p className="text-sm text-muted-foreground mt-1">The product database is managed by administrators.</p>
-        <Button asChild className="mt-6"><Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link></Button>
+        <Button className="mt-6" onClick={goBack}><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Button>
       </div>
     );
   }
@@ -84,8 +89,8 @@ export default function ProductDatabase() {
               <p className="text-xs text-muted-foreground hidden sm:block">Model-level resources</p>
             </div>
           </div>
-          <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden md:inline-flex">
-            <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link>
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden md:inline-flex" onClick={goBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog
           </Button>
         </div>
       </header>

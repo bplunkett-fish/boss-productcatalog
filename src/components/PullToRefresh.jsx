@@ -1,9 +1,9 @@
 import React, { useRef, useState, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 
-// Native-style pull-to-refresh for the Home catalog scroll area. Listens to
-// touch events on the wrapped content; only activates when the page is
-// scrolled to the very top so it never fights the sticky header or tab bar.
+// Native-style pull-to-refresh for scroll areas. Listens to touch events on
+// the wrapped content; only activates when the page is scrolled to the very
+// top so it never fights the sticky header or tab bar.
 export default function PullToRefresh({ onRefresh, children }) {
   const [distance, setDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -20,7 +20,11 @@ export default function PullToRefresh({ onRefresh, children }) {
     if (!pulling.current || refreshing) return;
     const delta = e.touches[0].clientY - startY.current;
     if (delta > 0 && window.scrollY <= 0) {
-      setDistance(Math.min(delta * 0.5, 80));
+      const max = 80;
+      // Elastic resistance: pull distance grows progressively slower as it
+      // approaches the maximum, for a native rubber-band feel.
+      const resisted = max * (1 - Math.exp(-delta / (max * 0.8)));
+      setDistance(Math.min(resisted, max));
     } else if (delta <= 0) {
       setDistance(0);
     }
@@ -44,16 +48,37 @@ export default function PullToRefresh({ onRefresh, children }) {
   }, [distance, onRefresh]);
 
   const show = distance > 0 || refreshing;
+  const animating = !pulling.current && !refreshing;
 
   return (
-    <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+    <div
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={{ touchAction: "pan-y" }}
+    >
       <div
-        className="flex items-center justify-center overflow-hidden transition-[height] duration-150"
-        style={{ height: Math.max(distance, 0) }}
+        className="overflow-hidden"
+        style={{
+          height: Math.max(distance, 0),
+          transition: animating ? "height 150ms ease-out" : "none",
+        }}
       >
-        {show && (
-          <Loader2 className={`w-5 h-5 text-muted-foreground ${refreshing || distance > 45 ? "animate-spin" : ""}`} />
-        )}
+        <div
+          className="flex items-center justify-center select-none"
+          style={{
+            height: 40,
+            transform: `translateY(${Math.max(distance - 40, -40)}px)`,
+            transition: animating ? "transform 150ms ease-out" : "none",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            WebkitTouchCallout: "none",
+          }}
+        >
+          {show && (
+            <Loader2 className={`w-5 h-5 text-muted-foreground ${refreshing || distance > 45 ? "animate-spin" : ""}`} />
+          )}
+        </div>
       </div>
       {children}
     </div>
