@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Package, LogOut, Database, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, LogOut, Database, Settings as SettingsIcon } from "lucide-react";
 import SerialLookup from "@/components/SerialLookup";
 import ManualSearch from "@/components/ManualSearch";
 import CatalogGrid from "@/components/CatalogGrid";
@@ -79,8 +79,8 @@ export default function Home() {
       <header className="sticky top-0 md:top-14 z-10 bg-card/80 backdrop-blur-md border-b border-border pt-safe">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <Package className="w-5 h-5 text-primary-foreground" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-primary shrink-0">
+              <img src="https://media.base44.com/images/public/6aa405b709b2a9584afa1b84/77e171e80_generated_image.png" alt="PartsCatalog" className="w-full h-full object-cover" />
             </div>
             <div className="leading-tight">
               <p className="font-semibold text-foreground">PartsCatalog</p>
