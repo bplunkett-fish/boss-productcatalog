@@ -34,25 +34,18 @@ export default function SerialLookup({ onAdded }) {
     setAdding(true);
     setError("");
     try {
-      const p = result.product;
-      await base44.entities.CatalogItem.create({
-        serial_number: p.serial_number,
-        model_number: p.model_number,
-        product_name: p.product_name,
-        product_description: p.product_description,
-        category: p.category,
-        manufacturer: p.manufacturer,
-        image_url: p.image_url,
-        manuals: p.manuals || [],
-        wiring_diagrams: p.wiring_diagrams || [],
-        videos: p.videos || [],
-        faqs: p.faqs || [],
-        troubleshooting: p.troubleshooting || [],
-        parts_links: p.parts_links || [],
+      const res = await base44.functions.invoke("addProductToCatalog", {
+        product: result.product,
       });
-      setSerial("");
-      setResult(null);
-      onAdded?.();
+      const data = res.data;
+      if (data.status === "already_claimed") {
+        setError(data.message || "This serial number has already been added to another owner's catalog.");
+      } else {
+        // "created" or "already_in_catalog" — clear the lookup and refresh the catalog
+        setSerial("");
+        setResult(null);
+        onAdded?.();
+      }
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Could not add to catalog");
     } finally {
