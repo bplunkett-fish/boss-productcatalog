@@ -11,11 +11,11 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-20 px-6">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-muted flex items-center justify-center mb-4">
           <PackageIcon />
         </div>
-        <h3 className="text-lg font-semibold text-slate-900">Your catalog is empty</h3>
-        <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+        <h3 className="text-lg font-semibold text-foreground">Your catalog is empty</h3>
+        <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
           Look up a product by serial number above and add it to start building your personal catalog.
         </p>
       </div>
@@ -31,10 +31,10 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
         return (
           <div
             key={item.id}
-            className="group rounded-2xl bg-white border border-slate-200 overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all duration-200 flex flex-col"
+            className="group rounded-2xl bg-card border border-border overflow-hidden hover:shadow-lg hover:border-foreground/20 transition-all duration-200 flex flex-col"
           >
             <Link to={`/product/${item.id}`} className="block">
-              <div className="aspect-[4/3] bg-slate-100 overflow-hidden">
+              <div className="aspect-[4/3] bg-muted overflow-hidden">
                 {image ? (
                   <img
                     src={image}
@@ -49,11 +49,11 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
               </div>
             </Link>
             <div className="p-4 flex flex-col flex-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{p?.category || "Product"}</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{p?.category || "Product"}</span>
               <Link to={`/product/${item.id}`}>
-                <h3 className="font-semibold text-slate-900 mt-1 leading-snug hover:underline">{name}</h3>
+                <h3 className="font-semibold text-foreground mt-1 leading-snug hover:underline">{name}</h3>
               </Link>
-              <p className="text-xs text-slate-500 mt-1 font-mono">{item.serial_number}</p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">{item.serial_number}</p>
 
               <div className="flex flex-wrap gap-1.5 mt-3">
                 <ResourceChip icon={FileText} count={countBadge(p?.manuals)} label="Manuals" />
@@ -64,7 +64,7 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
                 <ResourceChip icon={ShoppingCart} count={countBadge(p?.parts_links)} label="Parts" />
               </div>
 
-              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border">
                 <Button asChild size="sm" variant="default" className="flex-1">
                   <Link to={`/product/${item.id}`}>
                     View details <ArrowRight className="w-4 h-4 ml-1" />
@@ -73,9 +73,10 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-slate-200"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 border-border h-11 w-11 sm:h-9 sm:w-9"
                   onClick={() => onDelete(item)}
                   disabled={deletingId === item.id}
+                  aria-label={`Delete ${name} from catalog`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -91,7 +92,7 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
 function ResourceChip({ icon: Icon, count, label }) {
   if (!count) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-50 px-2 py-1 rounded-md">
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md">
       <Icon className="w-3 h-3" />
       {count} {label}
     </span>
@@ -100,7 +101,7 @@ function ResourceChip({ icon: Icon, count, label }) {
 
 function PackageIcon() {
   return (
-    <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <svg className="w-8 h-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
     </svg>
   );

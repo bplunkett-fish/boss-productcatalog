@@ -29,16 +29,16 @@ export default function ProductCsvImport() {
   return (
     <div className="flex flex-col">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-          <FileSpreadsheet className="w-5 h-5 text-slate-500" />
+        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <FileSpreadsheet className="w-5 h-5 text-muted-foreground" />
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-slate-900">Import models from CSV or Excel</p>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="font-semibold text-foreground">Import models from CSV or Excel</p>
+          <p className="text-sm text-muted-foreground mt-1">
             Bulk-load model-level records into the Product Database. Required columns:{" "}
-            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">model_number, product_name</span>
+            <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">model_number, product_name</span>
             {" "}— optional:{" "}
-            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">product_description, category, manufacturer, image_url, serial_number</span>
+            <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">product_description, category, manufacturer, image_url, serial_number</span>
           </p>
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function ProductCsvImport() {
             className="hidden"
             onChange={(e) => { setFile(e.target.files?.[0] || null); setResult(null); setError(""); }}
           />
-          <div className="flex items-center gap-2 px-4 h-11 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors text-sm text-slate-600">
+          <div className="flex items-center gap-2 px-4 h-11 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground">
             <UploadCloud className="w-4 h-4" />
             {file ? file.name : "Choose a CSV or Excel file…"}
           </div>
@@ -66,13 +66,13 @@ export default function ProductCsvImport() {
       </div>
 
       {error && (
-        <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-red-50 text-red-700 border border-red-200">
+        <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="text-sm">{error}</span>
         </div>
       )}
       {result && (
-        <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
           <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="text-sm">
             Imported {result.total} model{result.total === 1 ? "" : "s"} — {result.created} new, {result.updated} updated{result.serials_created ? `, ${result.serials_created} serial${result.serials_created === 1 ? "" : "s"} mapped` : ""}.

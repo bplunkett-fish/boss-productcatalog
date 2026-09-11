@@ -27,10 +27,20 @@ export default function SerialLookup({ onAdded }) {
     }
   };
 
+  // Optimistic add: insert a pending catalog item immediately, reconcile on response.
   const handleAdd = async () => {
     if (!result?.found) return;
     setAdding(true);
     setError("");
+    // Optimistically show the item in the catalog right away.
+    const pending = {
+      id: `pending-${Date.now()}`,
+      serial_number: result.serial_number,
+      model_number: result.model_number,
+      product: result.product || null,
+      _pending: true,
+    };
+    onAdded?.({ type: "optimistic_add", item: pending });
     try {
       const res = await base44.functions.invoke("addProductToCatalog", {
         serial_number: result.serial_number,
@@ -38,13 +48,17 @@ export default function SerialLookup({ onAdded }) {
       });
       const data = res.data;
       if (data.status === "already_claimed") {
+        // Roll back the optimistic item.
+        onAdded?.({ type: "optimistic_rollback", id: pending.id });
         setError(data.message || "This serial number has already been added to another owner's catalog.");
       } else {
+        // Reconcile: replace the pending placeholder with the real list.
         setSerial("");
         setResult(null);
-        onAdded?.();
+        onAdded?.({ type: "optimistic_commit", id: pending.id });
       }
     } catch (err) {
+      onAdded?.({ type: "optimistic_rollback", id: pending.id });
       setError(err.response?.data?.error || err.message || "Could not add to catalog");
     } finally {
       setAdding(false);
@@ -60,7 +74,7 @@ export default function SerialLookup({ onAdded }) {
             value={serial}
             onChange={(e) => setSerial(e.target.value)}
             placeholder="Enter a product serial number…"
-            className="pl-12 h-14 text-base sm:text-lg bg-white border-2 border-slate-200 focus-visible:border-slate-900 transition-colors"
+            className="pl-12 h-14 text-base sm:text-lg bg-card border-2 border-border focus-visible:border-ring transition-colors"
             disabled={loading}
           />
         </div>
@@ -74,52 +88,52 @@ export default function SerialLookup({ onAdded }) {
       </form>
 
       {error && (
-        <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-red-50 text-red-700 border border-red-200">
+        <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
           <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
           <span className="text-sm">{error}</span>
         </div>
       )}
 
       {result && !result.found && (
-        <div className="mt-6 p-6 rounded-2xl bg-amber-50 border border-amber-200 text-center">
+        <div className="mt-6 p-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
           <AlertCircle className="w-8 h-8 mx-auto text-amber-500 mb-2" />
-          <p className="text-amber-800 font-medium">
+          <p className="text-amber-700 dark:text-amber-300 font-medium">
             No product found for serial <span className="font-mono">{result.serial_number}</span>
           </p>
-          <p className="text-sm text-amber-600 mt-1">Try one of the sample serials: SN-10045-A, SN-22087-B, SN-55301-C</p>
+          <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">Try one of the sample serials: SN-10045-A, SN-22087-B, SN-55301-C</p>
         </div>
       )}
 
       {result && result.found && (
-        <div className="mt-6 p-6 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+        <div className="mt-6 p-6 rounded-2xl bg-card border-2 border-border shadow-sm">
           <div className="flex items-start gap-2 mb-4">
             <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
-            <span className="text-sm font-medium text-emerald-700">Matched model <span className="font-mono">{result.model_number}</span></span>
+            <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Matched model <span className="font-mono">{result.model_number}</span></span>
           </div>
           <div className="flex flex-col sm:flex-row gap-5">
             {result.product?.image_url && (
               <img
                 src={result.product.image_url}
                 alt={result.product.product_name}
-                className="w-full sm:w-40 h-40 object-cover rounded-xl bg-slate-100 shrink-0"
+                className="w-full sm:w-40 h-40 object-cover rounded-xl bg-muted shrink-0"
               />
             )}
             <div className="flex-1 min-w-0">
               {result.product ? (
                 <>
-                  <span className="inline-block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  <span className="inline-block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                     {result.product.category}
                   </span>
-                  <h3 className="text-xl font-semibold text-slate-900 leading-tight">{result.product.product_name}</h3>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <h3 className="text-xl font-semibold text-foreground leading-tight">{result.product.product_name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     {result.product.manufacturer} · Model {result.product.model_number}
                   </p>
-                  <p className="text-sm text-slate-600 mt-3 leading-relaxed">{result.product.product_description}</p>
+                  <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{result.product.product_description}</p>
                 </>
               ) : (
                 <>
-                  <h3 className="text-xl font-semibold text-slate-900 leading-tight">Model {result.model_number}</h3>
-                  <p className="text-sm text-slate-500 mt-2">No product details in the database yet — an admin can add manuals, videos, and parts from the Product Database.</p>
+                  <h3 className="text-xl font-semibold text-foreground leading-tight">Model {result.model_number}</h3>
+                  <p className="text-sm text-muted-foreground mt-2">No product details in the database yet — an admin can add manuals, videos, and parts from the Product Database.</p>
                 </>
               )}
               <Button onClick={handleAdd} disabled={adding} className="mt-4 h-11">

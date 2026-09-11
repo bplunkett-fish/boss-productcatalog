@@ -1,0 +1,162 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
+
+export default function Settings() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const [deleting, setDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [error, setError] = useState("");
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError("");
+    try {
+      await base44.functions.invoke("deleteAccount", {});
+      base44.auth.logout();
+    } catch (err) {
+      setError(err.response?.data?.error || err.message || "Could not delete account");
+      setDeleting(false);
+    }
+  };
+
+  const themeOptions = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+    { value: "system", label: "System", icon: Monitor },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-md border-b border-border pt-safe">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12 space-y-8">
+        {/* Account */}
+        <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <UserCircle className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground truncate">{user?.full_name || "Account"}</p>
+              <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Appearance */}
+        <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-1">Appearance</h2>
+          <p className="text-sm text-muted-foreground mb-4">Choose how ProductSync Pro looks.</p>
+          <div className="grid grid-cols-3 gap-2">
+            {themeOptions.map((opt) => {
+              const Icon = opt.icon;
+              const active = theme === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setTheme(opt.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    active ? "border-primary bg-primary/5 text-foreground" : "border-border text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm font-medium">{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Danger zone */}
+        <section className="rounded-2xl bg-card border border-destructive/30 p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-1">Delete account</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Permanently delete your account and all associated data. This removes your personal catalog
+            and warranty registrations. This action <span className="font-semibold text-destructive">cannot be undone</span>.
+          </p>
+
+          <AlertDialog
+            onOpenChange={(open) => {
+              if (!open) {
+                setConfirmText("");
+                setError("");
+              }
+            }}
+          >
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="min-h-11">
+                <Trash2 className="w-4 h-4 mr-2" /> Delete account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your personal catalog and warranty registrations will be permanently removed. You will be
+                  signed out immediately. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="py-2">
+                <Label htmlFor="confirm-delete">Type DELETE to confirm</Label>
+                <Input
+                  id="confirm-delete"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="mt-1.5"
+                  disabled={deleting}
+                />
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelete();
+                  }}
+                  disabled={deleting || confirmText !== "DELETE"}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Deleting…</>
+                  ) : (
+                    "Delete forever"
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </section>
+      </main>
+    </div>
+  );
+}

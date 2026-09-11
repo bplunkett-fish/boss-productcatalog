@@ -86,7 +86,27 @@
     @apply border-border outline-ring/50;
   }
 
+  html, body {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-background text-foreground font-body;
   }
+
+  /* Native-feel: make controls non-selectable, keep prose selectable. */
+  button, a, [role="tab"], [role="button"], [data-control] {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+@layer utilities {
+  .pt-safe { padding-top: max(env(safe-area-inset-top), 0px); }
+  .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+  .mt-safe { margin-top: max(env(safe-area-inset-top), 0px); }
+  .mb-safe { margin-bottom: max(env(safe-area-inset-bottom), 0px); }
+  .min-h-safe-top { min-height: env(safe-area-inset-top); }
 }

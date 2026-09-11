@@ -90,10 +90,10 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
     <div className="space-y-2">
       <input ref={fileInputRef} type="file" className="hidden" onChange={onFileChosen} />
       {items.map((it, idx) => (
-        <div key={idx} className="flex flex-wrap items-start gap-2 p-3 rounded-lg border border-slate-200 bg-slate-50">
+        <div key={idx} className="flex flex-wrap items-start gap-2 p-3 rounded-lg border border-border bg-muted">
           {fields.map(f => (
             <div key={f.key} className="flex-1 min-w-[140px]">
-              <label className="text-xs text-slate-500">{f.label}</label>
+              <label className="text-xs text-muted-foreground">{f.label}</label>
               <div className="flex gap-1 mt-0.5">
                 <Input
                   type={f.type === "number" ? "number" : "text"}
@@ -110,10 +110,11 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 shrink-0"
+                    className="h-11 w-11 sm:h-9 sm:w-9 shrink-0"
                     onClick={() => triggerUpload(idx, f.key)}
                     onMouseDown={(e) => e.preventDefault()}
                     disabled={!!active}
+                    aria-label="Upload a file"
                     title="Upload a file"
                   >
                     {isBusy(idx, f.key)
@@ -128,9 +129,10 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
             type="button"
             variant="ghost"
             size="icon"
-            className="mt-5 text-red-600 hover:bg-red-50"
+            className="mt-5 h-11 w-11 sm:h-9 sm:w-9 text-destructive hover:bg-destructive/10"
             onClick={() => removeRow(idx)}
             onMouseDown={(e) => e.preventDefault()}
+            aria-label="Remove row"
           >
             <Trash2 className="w-4 h-4" />
           </Button>

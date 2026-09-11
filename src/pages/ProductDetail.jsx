@@ -36,17 +36,17 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-7 h-7 animate-spin text-slate-400" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-7 h-7 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (notFound || !item) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 text-center">
-        <p className="text-lg font-semibold text-slate-900">Product not found</p>
-        <p className="text-sm text-slate-500 mt-1">This item may have been removed from your catalog.</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center pb-28">
+        <p className="text-lg font-semibold text-foreground">Product not found</p>
+        <p className="text-sm text-muted-foreground mt-1">This item may have been removed from your catalog.</p>
         <Button asChild className="mt-6">
           <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link>
         </Button>
@@ -61,32 +61,32 @@ export default function ProductDetail() {
   const description = product?.product_description;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b border-border pt-safe">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center">
-          <Button asChild variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
+          <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
             <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link>
           </Button>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12">
         <div className="flex flex-col sm:flex-row gap-6 mb-8">
-          <div className="w-full sm:w-56 h-56 rounded-2xl bg-slate-100 overflow-hidden shrink-0">
+          <div className="w-full sm:w-56 h-56 rounded-2xl bg-muted overflow-hidden shrink-0">
             {image ? (
               <img src={image} alt={name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Package className="w-12 h-12 text-slate-300" />
+                <Package className="w-12 h-12 text-muted-foreground/50" />
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               {category || "Product"}
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-tight">{name}</h1>
-            <p className="text-slate-500 mt-2">{manufacturer ? `${manufacturer} · ` : ""}Model {item.model_number}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-tight">{name}</h1>
+            <p className="text-muted-foreground mt-2">{manufacturer ? `${manufacturer} · ` : ""}Model {item.model_number}</p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-5">
               <DetailField label="Serial number" value={item.serial_number} mono />
@@ -95,23 +95,23 @@ export default function ProductDetail() {
             </div>
 
             {description && (
-              <p className="text-sm text-slate-600 mt-5 leading-relaxed max-w-2xl">{description}</p>
+              <p className="text-sm text-muted-foreground mt-5 leading-relaxed max-w-2xl">{description}</p>
             )}
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-7">
-          <h2 className="text-lg font-semibold text-slate-900 mb-5">Resources</h2>
+        <div className="bg-card rounded-2xl border border-border p-5 sm:p-7">
+          <h2 className="text-lg font-semibold text-foreground mb-5">Resources</h2>
           {product ? (
             <ResourceTabs product={product} />
           ) : (
-            <p className="text-slate-500 text-center py-12">No product details configured for this model yet.</p>
+            <p className="text-muted-foreground text-center py-12">No product details configured for this model yet.</p>
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-7 mt-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">Lifetime warranty registration</h2>
-          <p className="text-sm text-slate-500 mb-5">Register this unit for its lifetime warranty.</p>
+        <div className="bg-card rounded-2xl border border-border p-5 sm:p-7 mt-6">
+          <h2 className="text-lg font-semibold text-foreground mb-1">Lifetime warranty registration</h2>
+          <p className="text-sm text-muted-foreground mb-5">Register this unit for its lifetime warranty.</p>
           <WarrantyRegistrationForm item={item} product={product} />
         </div>
       </main>
@@ -122,8 +122,8 @@ export default function ProductDetail() {
 function DetailField({ label, value, mono }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wider text-slate-400">{label}</p>
-      <p className={`text-sm text-slate-900 mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`text-sm text-foreground mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
     </div>
   );
 }

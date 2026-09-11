@@ -16,7 +16,7 @@ export default function ResourceTabs({ product }) {
 
   if (available.length === 0) {
     return (
-      <div className="text-center py-16 text-slate-500">
+      <div className="text-center py-16 text-muted-foreground">
         No resources are available for this product.
       </div>
     );
@@ -27,8 +27,8 @@ export default function ResourceTabs({ product }) {
 
   return (
     <div>
-      {/* Tab bar */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 mb-6">
+      {/* Tab bar — horizontally scrollable on mobile, wraps on desktop */}
+      <div className="flex md:flex-wrap gap-2 overflow-x-auto md:overflow-visible border-b border-border mb-6 -mx-1 px-1 pb-1 md:pb-0 md:mx-0 md:px-0">
         {available.map((tab) => {
           const Icon = tab.icon;
           const isActive = tab.key === active;
@@ -36,15 +36,18 @@ export default function ResourceTabs({ product }) {
             <button
               key={tab.key}
               onClick={() => setActive(tab.key)}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              aria-label={tab.label}
+              aria-selected={isActive}
+              role="tab"
+              className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-t-md ${
                 isActive
-                  ? "border-slate-900 text-slate-900"
-                  : "border-transparent text-slate-400 hover:text-slate-600"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-4 h-4" />
               {tab.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"}`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                 {product[tab.key].length}
               </span>
             </button>
@@ -74,16 +77,16 @@ function ManualList({ items }) {
           href={m.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors group"
+          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-foreground/20 hover:bg-muted transition-colors group"
         >
-          <div className="w-11 h-11 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
             <FileText className="w-5 h-5 text-red-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-slate-900 truncate">{m.title}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{m.file_type || "PDF"} document</p>
+            <p className="font-medium text-foreground truncate">{m.title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{m.file_type || "PDF"} document</p>
           </div>
-          <Download className="w-5 h-5 text-slate-300 group-hover:text-slate-600 transition-colors shrink-0" />
+          <Download className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
         </a>
       ))}
     </div>
@@ -99,16 +102,16 @@ function DiagramList({ items }) {
           href={d.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors group"
+          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-foreground/20 hover:bg-muted transition-colors group"
         >
-          <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
             <Cable className="w-5 h-5 text-blue-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-slate-900 truncate">{d.title}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Wiring diagram</p>
+            <p className="font-medium text-foreground truncate">{d.title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Wiring diagram</p>
           </div>
-          <ExternalLink className="w-5 h-5 text-slate-300 group-hover:text-slate-600 transition-colors shrink-0" />
+          <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
         </a>
       ))}
     </div>
@@ -120,21 +123,21 @@ function VideoList({ items }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {items.map((v, i) => (
         <a key={i} href={v.url} target="_blank" rel="noopener noreferrer" className="group">
-          <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-100">
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
             {v.thumbnail ? (
               <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Video className="w-10 h-10 text-slate-300" />
+                <Video className="w-10 h-10 text-muted-foreground/50" />
               </div>
             )}
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
               <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
-                <svg className="w-6 h-6 text-slate-900 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                <svg className="w-6 h-6 text-foreground ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
               </div>
             </div>
           </div>
-          <p className="font-medium text-slate-900 mt-3 text-sm">{v.title}</p>
+          <p className="font-medium text-foreground mt-3 text-sm">{v.title}</p>
         </a>
       ))}
     </div>
@@ -154,15 +157,16 @@ function FaqList({ items }) {
 function FaqItem({ faq, defaultOpen }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-slate-200 overflow-hidden">
+    <div className="rounded-xl border border-border overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-slate-50 transition-colors"
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted transition-colors min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <span className="font-medium text-slate-900">{faq.question}</span>
-        <ChevronDown className={`w-5 h-5 text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="font-medium text-foreground">{faq.question}</span>
+        <ChevronDown className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && <div className="px-4 pb-4 text-sm text-slate-600 leading-relaxed">{faq.answer}</div>}
+      {open && <div className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed">{faq.answer}</div>}
     </div>
   );
 }
@@ -171,14 +175,14 @@ function TroubleshootingList({ items }) {
   return (
     <div className="grid gap-3">
       {items.map((t, i) => (
-        <div key={i} className="rounded-xl border border-slate-200 p-4">
+        <div key={i} className="rounded-xl border border-border p-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
               <Wrench className="w-4 h-4 text-amber-500" />
             </div>
             <div>
-              <p className="font-medium text-slate-900">{t.problem}</p>
-              <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">{t.solution}</p>
+              <p className="font-medium text-foreground">{t.problem}</p>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{t.solution}</p>
             </div>
           </div>
         </div>
@@ -196,19 +200,19 @@ function PartsList({ items }) {
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors group"
+          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-foreground/20 hover:bg-muted transition-colors group"
         >
-          <div className="w-11 h-11 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
             <ShoppingCart className="w-5 h-5 text-emerald-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-slate-900 truncate">{p.name}</p>
-            <p className="text-xs text-slate-400 mt-0.5 font-mono">Part #{p.part_number}</p>
+            <p className="font-medium text-foreground truncate">{p.name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-mono">Part #{p.part_number}</p>
           </div>
           {typeof p.price === "number" && (
-            <span className="font-semibold text-slate-900 shrink-0">${p.price.toFixed(2)}</span>
+            <span className="font-semibold text-foreground shrink-0">${p.price.toFixed(2)}</span>
           )}
-          <ExternalLink className="w-5 h-5 text-slate-300 group-hover:text-slate-600 transition-colors shrink-0" />
+          <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
         </a>
       ))}
     </div>

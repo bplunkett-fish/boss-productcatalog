@@ -59,10 +59,10 @@ export default function WarrantyRegistrationForm({ item, product }) {
 
   if (done) {
     return (
-      <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+      <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
         <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500 mb-3" />
-        <p className="text-emerald-800 font-semibold">Warranty registration submitted</p>
-        <p className="text-sm text-emerald-600 mt-1">
+        <p className="text-emerald-700 dark:text-emerald-300 font-semibold">Warranty registration submitted</p>
+        <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">
           Your lifetime warranty for Model {item.model_number} (Serial {item.serial_number}) has been registered.
         </p>
       </div>
@@ -71,9 +71,9 @@ export default function WarrantyRegistrationForm({ item, product }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
-        <ShieldCheck className="w-5 h-5 text-slate-500 mt-0.5 shrink-0" />
-        <p className="text-sm text-slate-600">
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-muted border border-border">
+        <ShieldCheck className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+        <p className="text-sm text-muted-foreground">
           Register this product for its lifetime warranty. We'll send your details to our warranty team.
         </p>
       </div>
@@ -117,7 +117,7 @@ export default function WarrantyRegistrationForm({ item, product }) {
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 text-red-700 border border-red-200">
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
           <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
           <span className="text-sm">{error}</span>
         </div>
@@ -139,8 +139,8 @@ export default function WarrantyRegistrationForm({ item, product }) {
 function Field({ label, required, className, children }) {
   return (
     <div className={className}>
-      <Label className="text-sm font-medium text-slate-700">
-        {label}{required && <span className="text-red-500"> *</span>}
+      <Label className="text-sm font-medium text-foreground">
+        {label}{required && <span className="text-destructive"> *</span>}
       </Label>
       <div className="mt-1.5">{children}</div>
     </div>
