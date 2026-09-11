@@ -10,12 +10,12 @@ import ResourceListEditor from "@/components/ResourceListEditor";
 const RESOURCE_FIELDS = {
   manuals: [
     { key: "title", label: "Title" },
-    { key: "url", label: "URL" },
+    { key: "url", label: "URL", upload: true },
     { key: "file_type", label: "Type" }
   ],
   wiring_diagrams: [
     { key: "title", label: "Title" },
-    { key: "url", label: "URL" }
+    { key: "url", label: "URL", upload: true }
   ],
   videos: [
     { key: "title", label: "Title" },
