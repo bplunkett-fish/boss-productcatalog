@@ -3,7 +3,25 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 // Imports model-level records into the Product Database from an uploaded CSV or
 // Excel file. Upserts by model_number — existing models are updated (scalar
 // fields only; resource arrays like manuals/videos are preserved), new models
-// are created. Admin only.
+// are created. Any image_url is fetched and re-uploaded into the app's own
+// public storage so the image lives within the app backend instead of
+// referencing an external host. Admin only.
+
+// Fetches an external image and re-uploads it to the app's public storage,
+// returning the internal file_url. Throws on failure so the caller can fall
+// back to the original external URL.
+async function importExternalImage(base44, url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`image fetch failed: ${res.status}`);
+  const blob = await res.blob();
+  const type = blob.type || 'image/jpeg';
+  const ext = (type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/g, '');
+  const file = new File([blob], `product-${Date.now()}.${ext}`, { type });
+  const { file_url } = await base44.asServiceRole.integrations.Core.UploadPublicFile({ file });
+  return file_url;
+}
+
+const isInternalUrl = (u) => /base44\.com|wixstatic\.com/i.test(u);
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -53,6 +71,21 @@ export default async function(req) {
       return Response.json({ error: 'No valid rows found. Required columns: model_number, product_name' }, { status: 400 });
     }
 
+    // Pull external images into the app's own storage. Already-internal URLs
+    // are left alone; failed uploads fall back to the original external URL so
+    // a single bad image never aborts the whole import.
+    let imagesImported = 0;
+    for (const r of cleaned) {
+      if (r.image_url && !isInternalUrl(r.image_url)) {
+        try {
+          r.image_url = await importExternalImage(base44, r.image_url);
+          imagesImported += 1;
+        } catch {
+          // keep the original external URL as a fallback
+        }
+      }
+    }
+
     const modelNumbers = cleaned.map(r => r.model_number);
     const existing = await base44.asServiceRole.entities.Product.filter({ model_number: { $in: modelNumbers } });
     const byModel = {};
@@ -94,7 +127,7 @@ export default async function(req) {
       updated = toUpdate.length;
     }
 
-    return Response.json({ status: 'ok', created, updated, total: created + updated });
+    return Response.json({ status: 'ok', created, updated, images_imported: imagesImported, total: created + updated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
