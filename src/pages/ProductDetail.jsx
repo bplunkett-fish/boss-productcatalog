@@ -62,7 +62,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border pt-safe">
+      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-md border-b border-border pt-safe">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center">
           <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
             <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link>

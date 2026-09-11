@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, Plus, Trash2, Pencil, Search, Package, ShieldAlert 
 import { useAuth } from "@/lib/AuthContext";
 import ProductEditor from "@/components/ProductEditor";
 import ProductCsvImport from "@/components/ProductCsvImport";
+import PullToRefresh from "@/components/PullToRefresh";
 
 export default function ProductDatabase() {
   const { user } = useAuth();
@@ -94,6 +95,7 @@ export default function ProductDatabase() {
           <ProductCsvImport />
         </section>
 
+        <PullToRefresh onRefresh={load}>
         <section>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <h2 className="text-xl font-semibold text-foreground">Models</h2>
@@ -142,6 +144,7 @@ export default function ProductDatabase() {
             </div>
           )}
         </section>
+        </PullToRefresh>
       </main>
 
       <ProductEditor open={editorOpen} product={editing} onClose={() => setEditorOpen(false)} onSave={handleSave} />
