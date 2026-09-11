@@ -18,9 +18,7 @@ export default function SerialLookup({ onAdded }) {
     if (!serial.trim()) return;
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("lookupProductBySerial", {
-        serial_number: serial.trim(),
-      });
+      const res = await base44.functions.invoke("lookupProductBySerial", { serial_number: serial.trim() });
       setResult(res.data);
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Lookup failed");
@@ -30,18 +28,18 @@ export default function SerialLookup({ onAdded }) {
   };
 
   const handleAdd = async () => {
-    if (!result?.product) return;
+    if (!result?.found) return;
     setAdding(true);
     setError("");
     try {
       const res = await base44.functions.invoke("addProductToCatalog", {
-        product: result.product,
+        serial_number: result.serial_number,
+        model_number: result.model_number
       });
       const data = res.data;
       if (data.status === "already_claimed") {
         setError(data.message || "This serial number has already been added to another owner's catalog.");
       } else {
-        // "created" or "already_in_catalog" — clear the lookup and refresh the catalog
         setSerial("");
         setResult(null);
         onAdded?.();
@@ -68,13 +66,9 @@ export default function SerialLookup({ onAdded }) {
         </div>
         <Button type="submit" size="lg" className="h-14 px-8 text-base font-medium" disabled={loading || !serial.trim()}>
           {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Looking up…
-            </>
+            <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Looking up…</>
           ) : (
-            <>
-              <Search className="w-5 h-5 mr-2" /> Look up
-            </>
+            <><Search className="w-5 h-5 mr-2" /> Look up</>
           )}
         </Button>
       </form>
@@ -100,10 +94,10 @@ export default function SerialLookup({ onAdded }) {
         <div className="mt-6 p-6 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
           <div className="flex items-start gap-2 mb-4">
             <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
-            <span className="text-sm font-medium text-emerald-700">Product found in SAGE ERP</span>
+            <span className="text-sm font-medium text-emerald-700">Matched model <span className="font-mono">{result.model_number}</span></span>
           </div>
           <div className="flex flex-col sm:flex-row gap-5">
-            {result.product.image_url && (
+            {result.product?.image_url && (
               <img
                 src={result.product.image_url}
                 alt={result.product.product_name}
@@ -111,23 +105,28 @@ export default function SerialLookup({ onAdded }) {
               />
             )}
             <div className="flex-1 min-w-0">
-              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                {result.product.category}
-              </span>
-              <h3 className="text-xl font-semibold text-slate-900 leading-tight">{result.product.product_name}</h3>
-              <p className="text-sm text-slate-500 mt-1">
-                {result.product.manufacturer} · Model {result.product.model_number}
-              </p>
-              <p className="text-sm text-slate-600 mt-3 leading-relaxed">{result.product.product_description}</p>
+              {result.product ? (
+                <>
+                  <span className="inline-block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                    {result.product.category}
+                  </span>
+                  <h3 className="text-xl font-semibold text-slate-900 leading-tight">{result.product.product_name}</h3>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {result.product.manufacturer} · Model {result.product.model_number}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-3 leading-relaxed">{result.product.product_description}</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-semibold text-slate-900 leading-tight">Model {result.model_number}</h3>
+                  <p className="text-sm text-slate-500 mt-2">No product details in the database yet — an admin can add manuals, videos, and parts from the Product Database.</p>
+                </>
+              )}
               <Button onClick={handleAdd} disabled={adding} className="mt-4 h-11">
                 {adding ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Adding…
-                  </>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Adding…</>
                 ) : (
-                  <>
-                    <PackagePlus className="w-4 h-4 mr-2" /> Add to my catalog
-                  </>
+                  <><PackagePlus className="w-4 h-4 mr-2" /> Add to my catalog</>
                 )}
               </Button>
             </div>

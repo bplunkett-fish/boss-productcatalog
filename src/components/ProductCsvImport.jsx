@@ -27,18 +27,18 @@ export default function ProductCsvImport() {
   };
 
   return (
-    <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-5 sm:p-6">
+    <div className="flex flex-col">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
           <FileSpreadsheet className="w-5 h-5 text-slate-500" />
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-slate-900">Import products from CSV</p>
+          <p className="font-semibold text-slate-900">Import models from CSV</p>
           <p className="text-sm text-slate-500 mt-1">
-            Temporary stand-in for SAGE ERP. Required columns:{" "}
-            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">serial_number, product_name</span>
+            Bulk-load model-level records into the Product Database. Required columns:{" "}
+            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">model_number, product_name</span>
             {" "}— optional:{" "}
-            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">model_number, product_description, category, manufacturer, image_url</span>
+            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">product_description, category, manufacturer, image_url</span>
           </p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function ProductCsvImport() {
         <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
           <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="text-sm">
-            Imported {result.total} product{result.total === 1 ? "" : "s"} — {result.created} new, {result.updated} updated.
+            Imported {result.total} model{result.total === 1 ? "" : "s"} — {result.created} new, {result.updated} updated.
           </span>
         </div>
       )}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Package, LogOut } from "lucide-react";
+import { Loader2, Package, LogOut, Database } from "lucide-react";
 import SerialLookup from "@/components/SerialLookup";
 import CatalogGrid from "@/components/CatalogGrid";
 import { useAuth } from "@/lib/AuthContext";
-import ProductCsvImport from "@/components/ProductCsvImport";
 
 export default function Home() {
   const { user } = useAuth();
@@ -16,7 +16,14 @@ export default function Home() {
   const loadCatalog = useCallback(async () => {
     try {
       const list = await base44.entities.CatalogItem.list("-created_date", 100);
-      setItems(list);
+      // Join model-level product details for display.
+      const models = [...new Set(list.map(i => i.model_number).filter(Boolean))];
+      const productMap = {};
+      if (models.length > 0) {
+        const products = await base44.entities.Product.filter({ model_number: { $in: models } }, "-updated_date", 200);
+        for (const p of products) productMap[p.model_number] = p;
+      }
+      setItems(list.map(i => ({ ...i, product: productMap[i.model_number] || null })));
     } catch (err) {
       setItems([]);
     } finally {
@@ -58,9 +65,16 @@ export default function Home() {
               <p className="text-xs text-slate-400 hidden sm:block">Product owner portal</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-500 hover:text-slate-900">
-            <LogOut className="w-4 h-4 mr-2" /> Sign out
-          </Button>
+          <div className="flex items-center gap-2">
+            {user?.role === "admin" && (
+              <Button asChild variant="ghost" size="sm" className="text-slate-500 hover:text-slate-900">
+                <Link to="/product-database"><Database className="w-4 h-4 mr-2" /> Product database</Link>
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-500 hover:text-slate-900">
+              <LogOut className="w-4 h-4 mr-2" /> Sign out
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -71,18 +85,12 @@ export default function Home() {
             Look up a product
           </h1>
           <p className="text-slate-500 mt-2 max-w-xl">
-            Enter a serial number to search your SAGE ERP. Found products can be added to your personal catalog with full manuals, diagrams, videos, and parts.
+            Enter a serial number to match it to a model in SAGE ERP. Matching products can be added to your personal catalog with full manuals, diagrams, videos, and parts.
           </p>
           <div className="mt-6">
             <SerialLookup onAdded={loadCatalog} />
           </div>
         </section>
-
-        {user?.role === "admin" && (
-          <section className="mb-10">
-            <ProductCsvImport />
-          </section>
-        )}
 
         {/* Catalog */}
         <section>

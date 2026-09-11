@@ -8,6 +8,7 @@ import ResourceTabs from "@/components/ResourceTabs";
 export default function ProductDetail() {
   const { id } = useParams();
   const [item, setItem] = useState(null);
+  const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -16,6 +17,14 @@ export default function ProductDetail() {
       try {
         const record = await base44.entities.CatalogItem.get(id);
         setItem(record);
+        if (record?.model_number) {
+          try {
+            const list = await base44.entities.Product.filter({ model_number: record.model_number }, "-updated_date", 1);
+            setProduct(list && list.length > 0 ? list[0] : null);
+          } catch {
+            setProduct(null);
+          }
+        }
       } catch (err) {
         setNotFound(true);
       } finally {
@@ -44,6 +53,12 @@ export default function ProductDetail() {
     );
   }
 
+  const name = product?.product_name || `Model ${item.model_number}`;
+  const image = product?.image_url;
+  const category = product?.category;
+  const manufacturer = product?.manufacturer;
+  const description = product?.product_description;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200">
@@ -55,11 +70,10 @@ export default function ProductDetail() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        {/* Product header */}
         <div className="flex flex-col sm:flex-row gap-6 mb-8">
           <div className="w-full sm:w-56 h-56 rounded-2xl bg-slate-100 overflow-hidden shrink-0">
-            {item.image_url ? (
-              <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
+            {image ? (
+              <img src={image} alt={name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Package className="w-12 h-12 text-slate-300" />
@@ -68,29 +82,30 @@ export default function ProductDetail() {
           </div>
           <div className="flex-1 min-w-0">
             <span className="inline-block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              {item.category || "Product"}
+              {category || "Product"}
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-tight">
-              {item.product_name}
-            </h1>
-            <p className="text-slate-500 mt-2">{item.manufacturer} · Model {item.model_number}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-tight">{name}</h1>
+            <p className="text-slate-500 mt-2">{manufacturer ? `${manufacturer} · ` : ""}Model {item.model_number}</p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-5">
               <DetailField label="Serial number" value={item.serial_number} mono />
               <DetailField label="Model" value={item.model_number} mono />
-              <DetailField label="Category" value={item.category} />
+              <DetailField label="Category" value={category} />
             </div>
 
-            {item.product_description && (
-              <p className="text-sm text-slate-600 mt-5 leading-relaxed max-w-2xl">{item.product_description}</p>
+            {description && (
+              <p className="text-sm text-slate-600 mt-5 leading-relaxed max-w-2xl">{description}</p>
             )}
           </div>
         </div>
 
-        {/* Resources */}
         <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-7">
           <h2 className="text-lg font-semibold text-slate-900 mb-5">Resources</h2>
-          <ResourceTabs product={item} />
+          {product ? (
+            <ResourceTabs product={product} />
+          ) : (
+            <p className="text-slate-500 text-center py-12">No product details configured for this model yet.</p>
+          )}
         </div>
       </main>
     </div>
