@@ -136,6 +136,30 @@ export default async function(req) {
       return Response.json({ error: 'Serial number is required' }, { status: 400 });
     }
 
+    // Temporary: check uploaded CSV product records before SAGE/mock fallback
+    const records = await base44.asServiceRole.entities.ProductRecord.filter({ serial_number: serialNumber });
+    if (records.length > 0) {
+      const r = records[0];
+      return Response.json({
+        found: true,
+        product: {
+          serial_number: r.serial_number,
+          model_number: r.model_number || "",
+          product_name: r.product_name,
+          product_description: r.product_description || "",
+          category: r.category || "",
+          manufacturer: r.manufacturer || "",
+          image_url: r.image_url || "",
+          manuals: [],
+          wiring_diagrams: [],
+          videos: [],
+          faqs: [],
+          troubleshooting: [],
+          parts_links: []
+        }
+      });
+    }
+
     const product = await lookupInSage(serialNumber);
 
     if (!product) {

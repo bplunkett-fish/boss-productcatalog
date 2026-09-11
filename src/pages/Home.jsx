@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Package, LogOut } from "lucide-react";
 import SerialLookup from "@/components/SerialLookup";
 import CatalogGrid from "@/components/CatalogGrid";
+import { useAuth } from "@/lib/AuthContext";
+import ProductCsvImport from "@/components/ProductCsvImport";
 
 export default function Home() {
+  const { user } = useAuth();
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
@@ -74,6 +77,12 @@ export default function Home() {
             <SerialLookup onAdded={loadCatalog} />
           </div>
         </section>
+
+        {user?.role === "admin" && (
+          <section className="mb-10">
+            <ProductCsvImport />
+          </section>
+        )}
 
         {/* Catalog */}
         <section>

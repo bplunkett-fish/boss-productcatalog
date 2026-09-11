@@ -1,0 +1,61 @@
+{
+  "name": "ProductRecord",
+  "type": "object",
+  "properties": {
+    "serial_number": {
+      "type": "string",
+      "title": "Serial Number"
+    },
+    "model_number": {
+      "type": "string",
+      "title": "Model Number"
+    },
+    "product_name": {
+      "type": "string",
+      "title": "Product Name"
+    },
+    "product_description": {
+      "type": "string",
+      "title": "Product Description"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "manufacturer": {
+      "type": "string",
+      "title": "Manufacturer"
+    },
+    "image_url": {
+      "type": "string",
+      "title": "Image URL",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "serial_number",
+    "product_name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
