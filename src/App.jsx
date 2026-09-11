@@ -12,7 +12,7 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 // Home is lazy-loaded below.
-import TabBar from '@/components/TabBar';
+import TabBar, { DesktopNav } from '@/components/TabBar';
 
 // Lazy-loaded routes (code-splitting for performance).
 const Home = lazy(() => import('@/pages/Home'));
@@ -56,6 +56,7 @@ function Page({ children }) {
 function AppLayout() {
   return (
     <>
+      <DesktopNav />
       <Outlet />
       <TabBar />
     </>

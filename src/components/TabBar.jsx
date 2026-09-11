@@ -1,16 +1,17 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home as HomeIcon, Database, Settings as SettingsIcon } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
-// Fixed bottom tab bar for mobile (md:hidden). Re-tapping the active tab
-// returns to that tab's root. Desktop keeps the existing top-bar navigation.
-export default function TabBar() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user } = useAuth();
+const STORAGE_KEY = "tabBarStack";
 
+// Shared in-memory stack so the desktop top nav and mobile bottom bar control
+// the same per-tab history/scroll state.
+const sharedTabState = { current: {} }; // tabPath -> { pathname, search, scrollY }
+const sharedPendingScroll = { current: null }; // scrollY to restore after a tab switch
+
+function buildTabs(user) {
   const tabs = [
     { label: "Catalog", path: "/", icon: HomeIcon, match: (p) => p === "/" || p.startsWith("/product/") },
   ];
@@ -18,33 +19,17 @@ export default function TabBar() {
     tabs.push({ label: "Database", path: "/product-database", icon: Database, match: (p) => p.startsWith("/product-database") });
   }
   tabs.push({ label: "Settings", path: "/settings", icon: SettingsIcon, match: (p) => p.startsWith("/settings") });
+  return tabs;
+}
 
-  // Per-tab navigation stack: stores each tab's last location + scroll so
-  // switching away and back restores where the user left off.
-  const tabStateRef = useRef({}); // tabPath -> { pathname, search, scrollY }
-  const pendingScrollRef = useRef(null); // scrollY to restore after a tab switch
+// Shared navigation logic for both the desktop top nav and the mobile bottom bar.
+function useTabBarLogic() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const tabs = buildTabs(user);
 
   const activeTabFor = (pathname) => tabs.find((t) => t.match(pathname));
-
-  // Track the active tab's current location as the user navigates within it,
-  // and restore any pending scroll position after a tab switch completes.
-  useEffect(() => {
-    const active = activeTabFor(location.pathname);
-    if (active) {
-      const prev = tabStateRef.current[active.path];
-      tabStateRef.current[active.path] = {
-        pathname: location.pathname,
-        search: location.search,
-        scrollY: prev?.scrollY ?? 0,
-      };
-    }
-    if (pendingScrollRef.current != null) {
-      const y = pendingScrollRef.current;
-      pendingScrollRef.current = null;
-      // Defer past ScrollToTop's instant reset so the per-tab restore wins.
-      requestAnimationFrame(() => window.scrollTo(0, y));
-    }
-  }, [location.pathname, location.search]);
 
   const handleTab = (tab) => {
     const currentActive = activeTabFor(location.pathname);
@@ -53,8 +38,8 @@ export default function TabBar() {
     // Capture the outgoing tab's scroll before navigating away.
     const captureScroll = (t) => {
       if (!t) return;
-      tabStateRef.current[t.path] = {
-        ...tabStateRef.current[t.path],
+      sharedTabState.current[t.path] = {
+        ...sharedTabState.current[t.path],
         scrollY: window.scrollY,
       };
     };
@@ -72,14 +57,86 @@ export default function TabBar() {
     // Switching to a different tab: restore its stored location, or go to
     // root on first visit.
     captureScroll(currentActive);
-    const stored = tabStateRef.current[tab.path];
+    const stored = sharedTabState.current[tab.path];
     if (stored) {
-      pendingScrollRef.current = stored.scrollY ?? 0;
+      sharedPendingScroll.current = stored.scrollY ?? 0;
       navigate(stored.pathname + (stored.search || ""));
     } else {
       navigate(tab.path);
     }
   };
+
+  return { tabs, handleTab, location, activeTabFor };
+}
+
+// Desktop sticky top nav (md+). Mirrors the mobile bottom bar for navigation
+// parity in desktop WebViews.
+export function DesktopNav() {
+  const { tabs, handleTab, location } = useTabBarLogic();
+  return (
+    <nav className="hidden md:flex sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border pt-safe">
+      <div className="max-w-6xl mx-auto w-full px-6 h-14 flex items-center gap-1">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = tab.match(location.pathname);
+          return (
+            <button
+              key={tab.path}
+              onClick={() => handleTab(tab)}
+              aria-label={tab.label}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "inline-flex items-center gap-2 px-3 h-10 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+// Fixed bottom tab bar for mobile (md:hidden). Re-tapping the active tab
+// returns to that tab's root. The per-tab stack is persisted to sessionStorage
+// so a reload preserves each tab's history and scroll position.
+export default function TabBar() {
+  const { tabs, handleTab, location, activeTabFor } = useTabBarLogic();
+
+  // Restore the persisted stack on mount.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) sharedTabState.current = JSON.parse(saved) || {};
+    } catch {}
+  }, []);
+
+  // Track the active tab's current location as the user navigates within it,
+  // persist the stack, and restore any pending scroll position after a tab
+  // switch completes.
+  useEffect(() => {
+    const active = activeTabFor(location.pathname);
+    if (active) {
+      const prev = sharedTabState.current[active.path];
+      sharedTabState.current[active.path] = {
+        pathname: location.pathname,
+        search: location.search,
+        scrollY: prev?.scrollY ?? 0,
+      };
+    }
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(sharedTabState.current));
+    } catch {}
+    if (sharedPendingScroll.current != null) {
+      const y = sharedPendingScroll.current;
+      sharedPendingScroll.current = null;
+      // Defer past ScrollToTop's instant reset so the per-tab restore wins.
+      requestAnimationFrame(() => window.scrollTo(0, y));
+    }
+  }, [location.pathname, location.search]);
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border pb-safe">

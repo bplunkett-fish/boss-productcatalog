@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Package } from "lucide-react";
 import ResourceTabs from "@/components/ResourceTabs";
 import WarrantyRegistrationForm from "@/components/WarrantyRegistrationForm";
+import PullToRefresh from "@/components/PullToRefresh";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -13,26 +14,28 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const record = await base44.entities.CatalogItem.get(id);
-        setItem(record);
-        if (record?.model_number) {
-          try {
-            const list = await base44.entities.Product.filter({ model_number: record.model_number }, "-updated_date", 1);
-            setProduct(list && list.length > 0 ? list[0] : null);
-          } catch {
-            setProduct(null);
-          }
+  const loadDetail = useCallback(async () => {
+    try {
+      const record = await base44.entities.CatalogItem.get(id);
+      setItem(record);
+      if (record?.model_number) {
+        try {
+          const list = await base44.entities.Product.filter({ model_number: record.model_number }, "-updated_date", 1);
+          setProduct(list && list.length > 0 ? list[0] : null);
+        } catch {
+          setProduct(null);
         }
-      } catch (err) {
-        setNotFound(true);
-      } finally {
-        setLoading(false);
       }
-    })();
+    } catch (err) {
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    loadDetail();
+  }, [loadDetail]);
 
   if (loading) {
     return (
@@ -62,7 +65,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-md border-b border-border pt-safe">
+      <header className="sticky top-0 md:top-14 z-10 bg-card/80 backdrop-blur-md border-b border-border pt-safe">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center">
           <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
             <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" /> Back to catalog</Link>
@@ -70,6 +73,7 @@ export default function ProductDetail() {
         </div>
       </header>
 
+      <PullToRefresh onRefresh={loadDetail}>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12">
         <div className="flex flex-col sm:flex-row gap-6 mb-8">
           <div className="w-full sm:w-56 h-56 rounded-2xl bg-muted overflow-hidden shrink-0">
@@ -115,6 +119,7 @@ export default function ProductDetail() {
           <WarrantyRegistrationForm item={item} product={product} />
         </div>
       </main>
+      </PullToRefresh>
     </div>
   );
 }
