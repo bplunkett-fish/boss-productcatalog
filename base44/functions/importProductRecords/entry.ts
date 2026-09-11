@@ -51,6 +51,7 @@ export default async function(req) {
         items: {
           type: 'object',
           properties: {
+            serial_number: { type: 'string' },
             model_number: { type: 'string' },
             product_name: { type: 'string' },
             product_description: { type: 'string' },
@@ -75,6 +76,7 @@ export default async function(req) {
 
     const cleaned = raw
       .map(r => ({
+        serial_number: String(r.serial_number || '').trim().toUpperCase(),
         model_number: String(r.model_number || '').trim().toUpperCase(),
         product_name: String(r.product_name || '').trim(),
         product_description: String(r.product_description || '').trim(),
@@ -88,11 +90,20 @@ export default async function(req) {
       return Response.json({ error: 'No valid rows found. Required columns: model_number, product_name' }, { status: 400 });
     }
 
+    // Products are unique by model_number — collapse duplicate model rows so we
+    // never create two Product records for the same model. Serials are handled
+    // separately in the serial→model mapping table below.
+    const uniqueByModel = {};
+    for (const r of cleaned) {
+      if (!uniqueByModel[r.model_number]) uniqueByModel[r.model_number] = r;
+    }
+    const productRows = Object.values(uniqueByModel);
+
     // Pull external images into the app's own storage. Already-internal URLs
     // are left alone; failed uploads fall back to the original external URL so
     // a single bad image never aborts the whole import.
     let imagesImported = 0;
-    for (const r of cleaned) {
+    for (const r of productRows) {
       if (r.image_url && !isInternalUrl(r.image_url)) {
         try {
           r.image_url = await importExternalImage(base44, r.image_url);
@@ -103,14 +114,14 @@ export default async function(req) {
       }
     }
 
-    const modelNumbers = cleaned.map(r => r.model_number);
+    const modelNumbers = productRows.map(r => r.model_number);
     const existing = await base44.asServiceRole.entities.Product.filter({ model_number: { $in: modelNumbers } });
     const byModel = {};
     for (const p of existing) byModel[p.model_number] = p;
 
     const toCreate = [];
     const toUpdate = [];
-    for (const r of cleaned) {
+    for (const r of productRows) {
       const ex = byModel[r.model_number];
       if (ex) {
         toUpdate.push({
@@ -144,7 +155,39 @@ export default async function(req) {
       updated = toUpdate.length;
     }
 
-    return Response.json({ status: 'ok', created, updated, images_imported: imagesImported, total: created + updated });
+    // Serial → model mappings. Until the SAGE ERP integration is live, these
+    // records let serial-number lookups resolve to a model (and thus to the
+    // Product). Upsert by serial_number so re-imports don't duplicate.
+    let serialsCreated = 0, serialsUpdated = 0;
+    const serialRows = cleaned.filter(r => r.serial_number);
+    if (serialRows.length) {
+      const serials = serialRows.map(r => r.serial_number);
+      const existingRecs = await base44.asServiceRole.entities.ProductRecord.filter({ serial_number: { $in: serials } });
+      const bySerial = {};
+      for (const pr of existingRecs) bySerial[pr.serial_number] = pr;
+      const recsToCreate = [];
+      const recsToUpdate = [];
+      for (const r of serialRows) {
+        const ex = bySerial[r.serial_number];
+        if (ex) {
+          if (ex.model_number !== r.model_number) {
+            recsToUpdate.push({ id: ex.id, serial_number: r.serial_number, model_number: r.model_number });
+          }
+        } else {
+          recsToCreate.push({ serial_number: r.serial_number, model_number: r.model_number });
+        }
+      }
+      if (recsToCreate.length) {
+        await base44.asServiceRole.entities.ProductRecord.bulkCreate(recsToCreate);
+        serialsCreated = recsToCreate.length;
+      }
+      if (recsToUpdate.length) {
+        await base44.asServiceRole.entities.ProductRecord.bulkUpdate(recsToUpdate);
+        serialsUpdated = recsToUpdate.length;
+      }
+    }
+
+    return Response.json({ status: 'ok', created, updated, images_imported: imagesImported, serials_created: serialsCreated, serials_updated: serialsUpdated, total: created + updated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

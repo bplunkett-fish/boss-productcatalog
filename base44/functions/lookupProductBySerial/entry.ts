@@ -9,13 +9,12 @@ import { secrets } from 'base44:runtime';
 // To connect your real SAGE ERP: set the SAGE_API_URL and SAGE_API_KEY secrets
 // in dashboard settings. The endpoint should return { model_number } for a
 // given serial.
-const SAMPLE_SAGE_MAP = {
-  "SN-10045-A": "GX-4500",
-  "SN-22087-B": "VF-220",
-  "SN-55301-C": "AS-12"
-};
+//
+// Until SAGE is connected, serials imported alongside models are stored in the
+// ProductRecord table (serial_number → model_number) and used as the fallback
+// mapping here.
 
-async function lookupModelInSage(serialNumber) {
+async function lookupModelNumber(base44, serialNumber) {
   const sageApiUrl = secrets.get("SAGE_API_URL");
   const sageApiKey = secrets.get("SAGE_API_KEY");
 
@@ -29,8 +28,11 @@ async function lookupModelInSage(serialNumber) {
     return (data.model_number || '').trim().toUpperCase() || null;
   }
 
-  // Stub: sample serials resolve to sample models; otherwise not found.
-  return SAMPLE_SAGE_MAP[serialNumber] || null;
+  // Fallback (until SAGE ERP is connected): resolve from the imported
+  // serial→model mapping table.
+  const records = await base44.entities.ProductRecord.filter({ serial_number: serialNumber }, '-updated_date', 1);
+  const rec = records && records.length > 0 ? records[0] : null;
+  return rec ? (rec.model_number || '').trim().toUpperCase() || null : null;
 }
 
 export default async function(req) {
@@ -46,7 +48,7 @@ export default async function(req) {
       return Response.json({ error: 'Serial number is required' }, { status: 400 });
     }
 
-    const modelNumber = await lookupModelInSage(serialNumber);
+    const modelNumber = await lookupModelNumber(base44, serialNumber);
     if (!modelNumber) {
       return Response.json({ found: false, serial_number: serialNumber });
     }

@@ -38,7 +38,7 @@ export default function ProductCsvImport() {
             Bulk-load model-level records into the Product Database. Required columns:{" "}
             <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">model_number, product_name</span>
             {" "}— optional:{" "}
-            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">product_description, category, manufacturer, image_url</span>
+            <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">product_description, category, manufacturer, image_url, serial_number</span>
           </p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function ProductCsvImport() {
         <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
           <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="text-sm">
-            Imported {result.total} model{result.total === 1 ? "" : "s"} — {result.created} new, {result.updated} updated.
+            Imported {result.total} model{result.total === 1 ? "" : "s"} — {result.created} new, {result.updated} updated{result.serials_created ? `, ${result.serials_created} serial${result.serials_created === 1 ? "" : "s"} mapped` : ""}.
           </span>
         </div>
       )}
