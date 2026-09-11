@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Loader2 } from "lucide-react";
 import ResourceListEditor from "@/components/ResourceListEditor";
+import ImageField from "@/components/ImageField";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const RESOURCE_FIELDS = {
@@ -119,8 +120,7 @@ export default function ProductEditor({ open, product, onClose, onSave }) {
           <Input value={form.manufacturer} onChange={(e) => set("manufacturer", e.target.value)} className="mt-1" />
         </div>
         <div className="sm:col-span-2">
-          <Label>Image URL</Label>
-          <Input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} className="mt-1" />
+          <ImageField value={form.image_url} onChange={(v) => set("image_url", v)} />
         </div>
         <div className="sm:col-span-2">
           <Label>Description</Label>
