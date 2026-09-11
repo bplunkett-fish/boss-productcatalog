@@ -11,11 +11,22 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 // returning the internal file_url. Throws on failure so the caller can fall
 // back to the original external URL.
 async function importExternalImage(base44, url) {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+      'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'
+    }
+  });
   if (!res.ok) throw new Error(`image fetch failed: ${res.status}`);
   const blob = await res.blob();
-  const type = blob.type || 'image/jpeg';
-  const ext = (type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/g, '');
+  const type = blob.type || '';
+  if (!type.startsWith('image/')) {
+    // Host returned a non-image (usually an HTML error/login page) — don't
+    // store it as the product image; throw so the caller falls back to the
+    // original URL.
+    throw new Error(`not an image (content-type: ${type || 'unknown'})`);
+  }
+  const ext = (type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/g, '') || 'jpg';
   const file = new File([blob], `product-${Date.now()}.${ext}`, { type });
   const { file_url } = await base44.asServiceRole.integrations.Core.UploadPublicFile({ file });
   return file_url;
