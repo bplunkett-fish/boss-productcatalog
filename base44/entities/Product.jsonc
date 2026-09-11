@@ -46,6 +46,25 @@
         }
       }
     },
+    "literature": {
+      "type": "array",
+      "title": "Product Literature",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "file_type": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "wiring_diagrams": {
       "type": "array",
       "title": "Wiring Diagrams",

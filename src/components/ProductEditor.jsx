@@ -38,6 +38,11 @@ const RESOURCE_FIELDS = {
     { key: "name", label: "Name" },
     { key: "url", label: "URL" },
     { key: "price", label: "Price", type: "number" }
+  ],
+  literature: [
+    { key: "title", label: "Title" },
+    { key: "url", label: "URL", upload: true },
+    { key: "file_type", label: "Type" }
   ]
 };
 
@@ -47,7 +52,8 @@ const RESOURCE_LABELS = {
   videos: "Videos",
   faqs: "FAQs",
   troubleshooting: "Troubleshooting",
-  parts_links: "Parts Store Links"
+  parts_links: "Parts Store Links",
+  literature: "Product Literature"
 };
 
 export default function ProductEditor({ open, product, onClose, onSave }) {
@@ -70,7 +76,8 @@ export default function ProductEditor({ open, product, onClose, onSave }) {
         videos: product?.videos || [],
         faqs: product?.faqs || [],
         troubleshooting: product?.troubleshooting || [],
-        parts_links: product?.parts_links || []
+        parts_links: product?.parts_links || [],
+        literature: product?.literature || []
       });
       setError("");
     }
