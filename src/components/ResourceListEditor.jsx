@@ -6,14 +6,19 @@ import { Plus, Trash2, UploadCloud, Loader2 } from "lucide-react";
 
 // Generic editor for an array of plain objects. `fields` describes the keys of
 // each row: [{ key, label, type?, upload? }]. type "number" parses numeric
-// input. upload true renders an upload button next to the URL field that stores
-// the file in the app backend and writes the resulting URL into the field.
+// input. upload true renders an upload button (local file) next to the URL
+// field AND auto-imports the file from a pasted URL when the field loses focus
+// — the file is stored in the app backend, just like a direct upload.
+const isInternalUrl = (u) => /base44\.com|wixstatic\.com/i.test(u);
+const isFetchableUrl = (u) => /^https?:\/\//i.test(u) && !isInternalUrl(u);
+
 export default function ResourceListEditor({ items = [], fields, onChange }) {
   const fileInputRef = useRef(null);
-  const [pending, setPending] = useState(null); // { idx, fieldKey }
-  const [uploading, setUploading] = useState(false);
+  const dirtyRef = useRef(new Set());
+  const [active, setActive] = useState(null); // { idx, fieldKey, kind }
 
   const update = (idx, key, value) => {
+    dirtyRef.current.add(`${idx}:${key}`);
     const next = items.map((it, i) => (i === idx ? { ...it, [key]: value } : it));
     onChange(next);
   };
@@ -31,34 +36,55 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
   };
 
   const triggerUpload = (idx, fieldKey) => {
-    setPending({ idx, fieldKey });
+    setActive({ idx, fieldKey, kind: "upload" });
     fileInputRef.current?.click();
   };
 
   const onFileChosen = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file || !pending) return;
-    setUploading(true);
+    if (!file || !active) return;
     try {
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
-      const patch = { [pending.fieldKey]: file_url };
-      // Auto-fill the file_type field (manuals) from the uploaded extension.
+      const patch = { [active.fieldKey]: file_url };
       if (fields.some(f => f.key === "file_type")) {
-        const ext = file.name.split(".").pop().toLowerCase();
-        patch.file_type = ext;
+        patch.file_type = file.name.split(".").pop().toLowerCase();
       }
-      updateMany(pending.idx, patch);
+      updateMany(active.idx, patch);
     } catch (err) {
       alert(err.message || "Upload failed");
     } finally {
-      setUploading(false);
-      setPending(null);
+      setActive(null);
     }
   };
 
-  const isUploadingField = (idx, key) =>
-    uploading && pending?.idx === idx && pending?.fieldKey === key;
+  const handleUrlBlur = async (idx, fieldKey, value) => {
+    const key = `${idx}:${fieldKey}`;
+    const edited = dirtyRef.current.has(key);
+    dirtyRef.current.delete(key);
+    if (!edited) return; // don't re-fetch pre-existing links on casual blur
+    const v = (value || "").trim();
+    if (!isFetchableUrl(v)) return;
+    setActive({ idx, fieldKey, kind: "import" });
+    try {
+      const res = await base44.functions.invoke("importFileFromUrl", { url: v });
+      const data = res.data;
+      if (data?.file_url) {
+        const patch = { [fieldKey]: data.file_url };
+        if (fields.some(f => f.key === "file_type") && data.file_type) {
+          patch.file_type = data.file_type;
+        }
+        updateMany(idx, patch);
+      }
+    } catch (err) {
+      // leave the original URL so the manual link still works
+      alert(err.response?.data?.error || err.message || "Import from URL failed");
+    } finally {
+      setActive(null);
+    }
+  };
+
+  const isBusy = (idx, key) => active?.idx === idx && active?.fieldKey === key;
 
   return (
     <div className="space-y-2">
@@ -75,8 +101,9 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
                   onChange={(e) =>
                     update(idx, f.key, f.type === "number" ? (e.target.value === "" ? "" : Number(e.target.value)) : e.target.value)
                   }
+                  onBlur={f.upload ? (e) => handleUrlBlur(idx, f.key, e.target.value) : undefined}
                   className="h-9"
-                  disabled={isUploadingField(idx, f.key)}
+                  disabled={isBusy(idx, f.key)}
                 />
                 {f.upload && (
                   <Button
@@ -85,10 +112,11 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
                     size="icon"
                     className="h-9 w-9 shrink-0"
                     onClick={() => triggerUpload(idx, f.key)}
-                    disabled={uploading}
+                    onMouseDown={(e) => e.preventDefault()}
+                    disabled={!!active}
                     title="Upload a file"
                   >
-                    {isUploadingField(idx, f.key)
+                    {isBusy(idx, f.key)
                       ? <Loader2 className="w-4 h-4 animate-spin" />
                       : <UploadCloud className="w-4 h-4" />}
                   </Button>
@@ -102,6 +130,7 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
             size="icon"
             className="mt-5 text-red-600 hover:bg-red-50"
             onClick={() => removeRow(idx)}
+            onMouseDown={(e) => e.preventDefault()}
           >
             <Trash2 className="w-4 h-4" />
           </Button>
