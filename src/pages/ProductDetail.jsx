@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Package } from "lucide-react";
 import ResourceTabs from "@/components/ResourceTabs";
+import WarrantyRegistrationForm from "@/components/WarrantyRegistrationForm";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -106,6 +107,12 @@ export default function ProductDetail() {
           ) : (
             <p className="text-slate-500 text-center py-12">No product details configured for this model yet.</p>
           )}
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-7 mt-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">Lifetime warranty registration</h2>
+          <p className="text-sm text-slate-500 mb-5">Register this unit for its lifetime warranty.</p>
+          <WarrantyRegistrationForm item={item} product={product} />
         </div>
       </main>
     </div>
