@@ -15,19 +15,19 @@ export default function Home() {
   const [searchParams] = useSearchParams();
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState(() => (searchParams.get("detail") ? "manual" : "serial"));
+  const [mode, setMode] = useState(() => searchParams.get("detail") ? "manual" : "serial");
 
   const loadCatalog = useCallback(async () => {
     try {
       // Fetch the catalog and the product database in parallel, then join by
       // model_number client-side.
       const [list, products] = await Promise.all([
-        base44.entities.CatalogItem.list("-created_date", 100),
-        base44.entities.Product.list("-updated_date", 200),
-      ]);
+      base44.entities.CatalogItem.list("-created_date", 100),
+      base44.entities.Product.list("-updated_date", 200)]
+      );
       const productMap = {};
       for (const p of products) productMap[p.model_number] = p;
-      setItems(list.map(i => ({ ...i, product: productMap[i.model_number] || null })));
+      setItems(list.map((i) => ({ ...i, product: productMap[i.model_number] || null })));
     } catch (err) {
       setItems([]);
     } finally {
@@ -50,7 +50,7 @@ export default function Home() {
       toast({
         title: "Could not delete item",
         description: err.response?.data?.error || err.message || "Something went wrong. The item was restored.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -59,7 +59,7 @@ export default function Home() {
   // insert a pending placeholder immediately, reconcile (reload) on commit,
   // or remove the placeholder on rollback (e.g. already_claimed).
   const handleCatalogEvent = useCallback((event) => {
-    if (!event || typeof event !== "object") { loadCatalog(); return; }
+    if (!event || typeof event !== "object") {loadCatalog();return;}
     if (event.type === "optimistic_add") {
       setItems((prev) => [event.item, ...(prev || [])]);
     } else if (event.type === "optimistic_rollback") {
@@ -80,19 +80,19 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-primary shrink-0">
-              <img src="https://media.base44.com/images/public/6aa405b709b2a9584afa1b84/77e171e80_generated_image.png" alt="PartsCatalog" className="w-full h-full object-cover" />
+              <img src="https://media.base44.com/images/public/6aa405b709b2a9584afa1b84/4bb03db4b_app-logo-square.png" alt="PartsCatalog" className="w-full h-full object-cover" />
             </div>
             <div className="leading-tight">
-              <p className="font-semibold text-foreground">PartsCatalog</p>
+              <p className="font-semibold text-foreground">Product Catalog</p>
               <p className="text-xs text-muted-foreground hidden sm:block">Product owner portal</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {user?.role === "admin" && (
-              <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden md:inline-flex">
+            {user?.role === "admin" &&
+            <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden md:inline-flex">
                 <Link to="/product-database"><Database className="w-4 h-4 mr-2" /> Product database</Link>
               </Button>
-            )}
+            }
             <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden md:inline-flex" aria-label="Settings">
               <Link to="/settings"><SettingsIcon className="w-4 h-4 md:mr-2" /><span className="hidden md:inline">Settings</span></Link>
             </Button>
@@ -119,28 +119,28 @@ export default function Home() {
               onClick={() => setMode("serial")}
               aria-pressed={mode === "serial"}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                mode === "serial" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
+              mode === "serial" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`
+              }>
+              
               Serial lookup
             </button>
             <button
               onClick={() => setMode("manual")}
               aria-pressed={mode === "manual"}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                mode === "manual" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
+              mode === "manual" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`
+              }>
+              
               Manual search
             </button>
           </div>
 
           <div className="mt-6">
-            {mode === "serial" ? (
-              <SerialLookup onAdded={handleCatalogEvent} />
-            ) : (
-              <ManualSearch onAdded={handleCatalogEvent} />
-            )}
+            {mode === "serial" ?
+            <SerialLookup onAdded={handleCatalogEvent} /> :
+
+            <ManualSearch onAdded={handleCatalogEvent} />
+            }
           </div>
         </section>
 
@@ -148,22 +148,22 @@ export default function Home() {
         <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-semibold text-foreground">My catalog</h2>
-            {items && items.length > 0 && (
-              <span className="text-sm text-muted-foreground">{items.length} {items.length === 1 ? "product" : "products"}</span>
-            )}
+            {items && items.length > 0 &&
+            <span className="text-sm text-muted-foreground">{items.length} {items.length === 1 ? "product" : "products"}</span>
+            }
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
+          {loading ?
+          <div className="flex items-center justify-center py-20">
               <Loader2 className="w-7 h-7 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <PullToRefresh onRefresh={loadCatalog}>
+            </div> :
+
+          <PullToRefresh onRefresh={loadCatalog}>
               <CatalogGrid items={items || []} onDelete={handleDelete} />
             </PullToRefresh>
-          )}
+          }
         </section>
       </main>
-    </div>
-  );
+    </div>);
+
 }
