@@ -29,13 +29,20 @@ export default function ClaimedSerials() {
 
   const load = useCallback(async () => {
     try {
-      const [items, users] = await Promise.all([
+      const [items, users, products] = await Promise.all([
         base44.entities.CatalogItem.list("-created_date", 500),
-        base44.entities.User.list()
+        base44.entities.User.list(),
+        base44.entities.Product.list("-updated_date", 500)
       ]);
       const userMap = {};
       for (const u of users) userMap[u.id] = u;
-      setRows(items.map((i) => ({ ...i, owner: userMap[i.created_by_id] || null })));
+      const productMap = {};
+      for (const p of products) productMap[p.model_number] = p;
+      setRows(items.map((i) => ({
+        ...i,
+        owner: userMap[i.created_by_id] || null,
+        product: productMap[i.model_number] || null
+      })));
     } catch (err) {
       setRows([]);
     } finally {
@@ -125,17 +132,19 @@ export default function ClaimedSerials() {
             ) : (
               <div className="overflow-x-auto">
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                  <div className="hidden sm:grid grid-cols-[1.2fr_1.2fr_1.6fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
+                  <div className="hidden sm:grid grid-cols-[1.1fr_1.1fr_1.4fr_1.6fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
                     <span>Serial number</span>
                     <span>Model</span>
+                    <span>Product</span>
                     <span>Claimed by</span>
                     <span />
                   </div>
                   <div className="divide-y divide-border">
                     {filtered.map((r) => (
-                      <div key={r.id} className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.2fr_1.6fr_auto] gap-2 sm:gap-4 px-4 sm:px-5 py-4 items-center">
+                      <div key={r.id} className="grid grid-cols-1 sm:grid-cols-[1.1fr_1.1fr_1.4fr_1.6fr_auto] gap-2 sm:gap-4 px-4 sm:px-5 py-4 items-center">
                         <div className="font-mono text-sm font-medium text-foreground">{r.serial_number}</div>
                         <div className="text-sm text-muted-foreground font-mono">{r.model_number}</div>
+                        <div className="text-sm text-foreground truncate">{r.product?.product_name || "—"}</div>
                         <div className="flex items-center gap-2 min-w-0">
                           <UserCircle className="w-4 h-4 text-muted-foreground shrink-0" />
                           <div className="min-w-0">
