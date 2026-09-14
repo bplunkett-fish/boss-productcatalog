@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Hash, Search, Trash2, ShieldAlert, UserCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Hash, Search, Trash2, ShieldAlert, UserCircle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import PullToRefresh from "@/components/PullToRefresh";
 import {
@@ -24,6 +24,7 @@ export default function ClaimedSerials() {
   const [rows, setRows] = useState(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState({ key: "serial", dir: "asc" });
   const [pending, setPending] = useState(null);
   const [removing, setRemoving] = useState(false);
 
@@ -68,6 +69,22 @@ export default function ClaimedSerials() {
     if (!q) return true;
     return [r.serial_number, r.model_number, r.owner?.full_name, r.owner?.email]
       .some((v) => (v || "").toLowerCase().includes(q));
+  });
+
+  const SORT_KEYS = {
+    serial: (r) => (r.serial_number || "").toLowerCase(),
+    product: (r) => (r.product?.product_name || r.model_number || "").toLowerCase(),
+    owner: (r) => (r.owner?.full_name || r.owner?.email || "").toLowerCase()
+  };
+
+  const toggleSort = (key) => setSort((s) => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
+
+  const sorted = [...filtered].sort((a, b) => {
+    const av = SORT_KEYS[sort.key](a);
+    const bv = SORT_KEYS[sort.key](b);
+    if (av < bv) return sort.dir === "asc" ? -1 : 1;
+    if (av > bv) return sort.dir === "asc" ? 1 : -1;
+    return 0;
   });
 
   const confirmRemove = async () => {
@@ -133,13 +150,22 @@ export default function ClaimedSerials() {
               <div className="overflow-x-auto">
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                   <div className="hidden sm:grid grid-cols-[1.2fr_1.8fr_1.6fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
-                    <span>Serial number</span>
-                    <span>Product</span>
-                    <span>Claimed by</span>
+                    <button onClick={() => toggleSort("serial")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors text-left">
+                      Serial number
+                      {sort.key === "serial" ? (sort.dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                    </button>
+                    <button onClick={() => toggleSort("product")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors text-left">
+                      Product
+                      {sort.key === "product" ? (sort.dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                    </button>
+                    <button onClick={() => toggleSort("owner")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors text-left">
+                      Claimed by
+                      {sort.key === "owner" ? (sort.dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                    </button>
                     <span />
                   </div>
                   <div className="divide-y divide-border">
-                    {filtered.map((r) => (
+                    {sorted.map((r) => (
                       <div key={r.id} className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.8fr_1.6fr_auto] gap-2 sm:gap-4 px-4 sm:px-5 py-4 items-center">
                         <div className="font-mono text-sm font-medium text-foreground">{r.serial_number}</div>
                         <div className="min-w-0">
