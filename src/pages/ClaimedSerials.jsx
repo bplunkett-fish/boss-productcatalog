@@ -132,19 +132,20 @@ export default function ClaimedSerials() {
             ) : (
               <div className="overflow-x-auto">
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                  <div className="hidden sm:grid grid-cols-[1.1fr_1.1fr_1.4fr_1.6fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
+                  <div className="hidden sm:grid grid-cols-[1.2fr_1.8fr_1.6fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
                     <span>Serial number</span>
-                    <span>Model</span>
                     <span>Product</span>
                     <span>Claimed by</span>
                     <span />
                   </div>
                   <div className="divide-y divide-border">
                     {filtered.map((r) => (
-                      <div key={r.id} className="grid grid-cols-1 sm:grid-cols-[1.1fr_1.1fr_1.4fr_1.6fr_auto] gap-2 sm:gap-4 px-4 sm:px-5 py-4 items-center">
+                      <div key={r.id} className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.8fr_1.6fr_auto] gap-2 sm:gap-4 px-4 sm:px-5 py-4 items-center">
                         <div className="font-mono text-sm font-medium text-foreground">{r.serial_number}</div>
-                        <div className="text-sm text-muted-foreground font-mono">{r.model_number}</div>
-                        <div className="text-sm text-foreground truncate">{r.product?.product_name || "—"}</div>
+                        <div className="min-w-0">
+                          <p className="text-sm text-foreground truncate">{r.product?.product_name || "—"}</p>
+                          {r.model_number && <p className="text-xs text-muted-foreground italic font-mono truncate">{r.model_number}</p>}
+                        </div>
                         <div className="flex items-center gap-2 min-w-0">
                           <UserCircle className="w-4 h-4 text-muted-foreground shrink-0" />
                           <div className="min-w-0">
