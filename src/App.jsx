@@ -22,6 +22,7 @@ const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
 const ProductDatabase = lazy(() => import('@/pages/ProductDatabase'));
+const ClaimedSerials = lazy(() => import('@/pages/ClaimedSerials'));
 const Settings = lazy(() => import('@/components/Settings'));
 
 function Spinner() {
@@ -77,6 +78,7 @@ function AnimatedRoutes() {
             <Route path="/" element={<Suspense fallback={<Spinner />}><Page><Home /></Page></Suspense>} />
             <Route path="/product/:id" element={<Suspense fallback={<Spinner />}><Page><ProductDetail /></Page></Suspense>} />
             <Route path="/product-database" element={<Suspense fallback={<Spinner />}><Page><ProductDatabase /></Page></Suspense>} />
+            <Route path="/claimed-serials" element={<Suspense fallback={<Spinner />}><Page><ClaimedSerials /></Page></Suspense>} />
             <Route path="/settings" element={<Suspense fallback={<Spinner />}><Page><Settings /></Page></Suspense>} />
           </Route>
         </Route>
