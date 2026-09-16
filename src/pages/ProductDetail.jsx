@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Package } from "lucide-react";
 import ResourceTabs from "@/components/ResourceTabs";
 import WarrantyRegistrationForm from "@/components/WarrantyRegistrationForm";
+import MaintenanceCard from "@/components/MaintenanceCard";
 import PullToRefresh from "@/components/PullToRefresh";
 
 export default function ProductDetail() {
@@ -118,6 +119,8 @@ export default function ProductDetail() {
             <p className="text-muted-foreground text-center py-12">No product details configured for this model yet.</p>
           )}
         </div>
+
+        <MaintenanceCard item={item} product={product} onUpdated={loadDetail} />
 
         <div className="bg-card rounded-2xl border border-border p-5 sm:p-7 mt-6">
           <h2 className="text-lg font-semibold text-foreground mb-1">Lifetime warranty registration</h2>

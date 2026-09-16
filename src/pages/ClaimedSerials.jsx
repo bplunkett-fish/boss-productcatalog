@@ -74,10 +74,14 @@ export default function ClaimedSerials() {
   const SORT_KEYS = {
     serial: (r) => (r.serial_number || "").toLowerCase(),
     product: (r) => (r.product?.product_name || r.model_number || "").toLowerCase(),
-    owner: (r) => (r.owner?.full_name || r.owner?.email || "").toLowerCase()
+    owner: (r) => (r.owner?.full_name || r.owner?.email || "").toLowerCase(),
+    lastService: (r) => r.last_maintenance_date || "",
+    due: (r) => r.maintenance_due_date || ""
   };
 
   const toggleSort = (key) => setSort((s) => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
 
   const sorted = [...filtered].sort((a, b) => {
     const av = SORT_KEYS[sort.key](a);
@@ -149,7 +153,7 @@ export default function ClaimedSerials() {
             ) : (
               <div className="overflow-x-auto">
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                  <div className="hidden sm:grid grid-cols-[1.2fr_1.8fr_1.6fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
+                  <div className="hidden sm:grid grid-cols-[1.1fr_1.7fr_1.5fr_1fr_1fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
                     <button onClick={() => toggleSort("serial")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors text-left">
                       Serial number
                       {sort.key === "serial" ? (sort.dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
@@ -162,11 +166,19 @@ export default function ClaimedSerials() {
                       Claimed by
                       {sort.key === "owner" ? (sort.dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
                     </button>
+                    <button onClick={() => toggleSort("lastService")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors text-left">
+                      Last service
+                      {sort.key === "lastService" ? (sort.dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                    </button>
+                    <button onClick={() => toggleSort("due")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors text-left">
+                      Next due
+                      {sort.key === "due" ? (sort.dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                    </button>
                     <span />
                   </div>
                   <div className="divide-y divide-border">
                     {sorted.map((r) => (
-                      <div key={r.id} className="grid grid-cols-1 sm:grid-cols-[1.2fr_1.8fr_1.6fr_auto] gap-2 sm:gap-4 px-4 sm:px-5 py-4 items-center">
+                      <div key={r.id} className="grid grid-cols-1 sm:grid-cols-[1.1fr_1.7fr_1.5fr_1fr_1fr_auto] gap-2 sm:gap-4 px-4 sm:px-5 py-4 items-center">
                         <div className="font-mono text-sm font-medium text-foreground">{r.serial_number}</div>
                         <div className="min-w-0">
                           <p className="text-sm text-foreground truncate">{r.product?.product_name || "—"}</p>
@@ -178,6 +190,14 @@ export default function ClaimedSerials() {
                             <p className="text-sm text-foreground truncate">{r.owner?.full_name || "Unknown user"}</p>
                             <p className="text-xs text-muted-foreground truncate">{r.owner?.email || ""}</p>
                           </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground sm:hidden">Last service</p>
+                          <p className="text-sm font-mono text-foreground">{r.last_maintenance_date || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground sm:hidden">Next due</p>
+                          <p className={`text-sm font-mono ${r.maintenance_due_date && new Date(r.maintenance_due_date + "T00:00:00") < today ? "text-destructive" : "text-foreground"}`}>{r.maintenance_due_date || "—"}</p>
                         </div>
                         <div className="flex justify-end">
                           <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 min-h-11" onClick={() => setPending(r)} disabled={removing}>
