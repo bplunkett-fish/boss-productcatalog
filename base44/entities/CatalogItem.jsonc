@@ -9,6 +9,21 @@
     "model_number": {
       "type": "string",
       "title": "Model Number"
+    },
+    "last_maintenance_date": {
+      "type": "string",
+      "title": "Last Maintenance Date",
+      "format": "date"
+    },
+    "maintenance_due_date": {
+      "type": "string",
+      "title": "Maintenance Due Date",
+      "format": "date"
+    },
+    "maintenance_silenced": {
+      "type": "boolean",
+      "title": "Maintenance Reminders Silenced",
+      "default": false
     }
   },
   "required": [
