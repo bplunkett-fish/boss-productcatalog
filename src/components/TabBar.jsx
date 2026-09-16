@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Home as HomeIcon, Database, Settings as SettingsIcon, Hash, Bell } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
+import NotificationBell from "@/components/NotificationBell";
 
 const STORAGE_KEY = "tabBarStack";
 
@@ -97,6 +98,7 @@ export function DesktopNav() {
             </button>
           );
         })}
+        <div className="ml-auto"><NotificationBell /></div>
       </div>
     </nav>
   );

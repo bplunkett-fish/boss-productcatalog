@@ -9,6 +9,7 @@ import CatalogGrid from "@/components/CatalogGrid";
 import PullToRefresh from "@/components/PullToRefresh";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function Home() {
   const { user } = useAuth();
@@ -88,6 +89,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <div className="md:hidden"><NotificationBell /></div>
             {user?.role === "admin" &&
             <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden md:inline-flex">
                 <Link to="/product-database"><Database className="w-4 h-4 mr-2" /> Product database</Link>

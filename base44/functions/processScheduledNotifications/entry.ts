@@ -4,9 +4,9 @@ import { isOptedIn } from "../../shared/notifications.ts";
 // Processes admin-scheduled push notifications whose send time has arrived.
 // Invoked every few minutes by the "Scheduled Notifications" workflow, and
 // also on demand when an admin sends a notification immediately. For each
-// due notification, pushes to every user who opted into its category, then
-// marks it sent. Runs with the service role (no end user); direct calls by a
-// signed-in non-admin are rejected.
+// due notification it delivers an in-app alert (AppNotification) to every
+// opted-in user and attempts a native push for mobile. Runs with the service
+// role (no end user); direct calls by a signed-in non-admin are rejected.
 const APP_URL = "https://hypersonic-sync-your-gear.base44.app";
 
 export default async function(req) {
@@ -28,9 +28,32 @@ export default async function(req) {
 
     let processed = 0;
     for (const n of due) {
-      let sent = 0;
+      // Idempotent: skip users who already have an in-app alert for this
+      // scheduled notification (protects against re-runs if the status
+      // update below fails).
+      const existing = await svc.entities.AppNotification.filter({ ref_id: n.id }, "-created_date", 1000);
+      const alreadyNotified = new Set(existing.map((e) => e.user_id));
+
+      let delivered = 0;
       for (const u of users) {
         if (!isOptedIn(u, n.category)) continue;
+        if (alreadyNotified.has(u.id)) continue;
+
+        try {
+          await svc.entities.AppNotification.create({
+            user_id: u.id,
+            title: n.title,
+            content: n.content,
+            category: n.category,
+            ref_id: n.id,
+            read: false,
+            action_url: APP_URL
+          });
+          delivered++;
+        } catch (e) {
+          continue; // don't push if the in-app alert didn't persist
+        }
+
         try {
           await svc.integrations.Core.SendPushNotification({
             user_id: u.id,
@@ -39,17 +62,18 @@ export default async function(req) {
             action_label: "Open app",
             action_url: APP_URL
           });
-          sent++;
         } catch (e) {
           // Push may fail if no native mobile build / push credentials are
-          // configured — continue to the next user.
+          // configured — the in-app alert still reached the user.
         }
       }
+
       try {
-        await svc.entities.ScheduledNotification.update(n.id, { status: "sent", sent_count: sent });
+        await svc.entities.ScheduledNotification.update(n.id, { status: "sent", sent_count: delivered });
         processed++;
       } catch (e) {
-        // If the status update fails, leave it pending so it retries next run.
+        // Leave pending so it retries next run; idempotency above prevents
+        // duplicate deliveries.
       }
     }
 

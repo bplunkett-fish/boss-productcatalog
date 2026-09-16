@@ -3,8 +3,10 @@ import { isOptedIn } from "../../shared/notifications.ts";
 
 // Daily maintenance reminder job (invoked by the "Maintenance Reminders"
 // workflow). For every catalog item whose maintenance is due within 7 days
-// (or already overdue), sends a push notification to the owner — repeating
-// daily until they silence reminders or update the maintenance date.
+// (or already overdue), delivers an in-app alert (AppNotification) and a
+// native push to the owner — repeating daily (push) until they silence
+// reminders or update the maintenance date. The in-app alert is created
+// once per cycle (no duplicates while an unread one exists for the item).
 //
 // Runs with the service role (no end user), so it can read all catalog items
 // and push to any owner. Direct calls by a signed-in non-admin are rejected.
@@ -46,6 +48,23 @@ export default async function(req) {
       const content = diffDays <= 0
         ? `Maintenance is overdue for ${name} (was due ${dueStr}). Last serviced ${lastStr}. Update the date or silence reminders.`
         : `Maintenance for ${name} is due in ${diffDays} day${diffDays === 1 ? "" : "s"} (${dueStr}). Last serviced ${lastStr}.`;
+      const actionUrl = `${APP_URL}/product/${item.id}`;
+
+      // In-app alert: one per cycle — skip if an unread one already exists.
+      try {
+        const existing = await svc.entities.AppNotification.filter({ ref_id: item.id, read: false }, "-created_date", 50);
+        if (!existing || existing.length === 0) {
+          await svc.entities.AppNotification.create({
+            user_id: item.created_by_id,
+            title: "Maintenance reminder",
+            content,
+            category: "Product Maintenance",
+            ref_id: item.id,
+            read: false,
+            action_url: actionUrl
+          });
+        }
+      } catch (e) { /* ignore in-app create failures */ }
 
       try {
         await svc.integrations.Core.SendPushNotification({
@@ -53,12 +72,12 @@ export default async function(req) {
           title: "Maintenance reminder",
           content,
           action_label: "View details",
-          action_url: `${APP_URL}/product/${item.id}`
+          action_url: actionUrl
         });
         sent++;
       } catch (e) {
-        // Push may fail if no native mobile build / push credentials are
-        // configured — continue to the next item.
+        // Push may fail without a native mobile build — the in-app alert
+        // still reached the owner.
       }
     }
 

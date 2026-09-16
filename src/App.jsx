@@ -24,6 +24,7 @@ const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
 const ProductDatabase = lazy(() => import('@/pages/ProductDatabase'));
 const ClaimedSerials = lazy(() => import('@/pages/ClaimedSerials'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
+const Inbox = lazy(() => import('@/pages/Inbox'));
 const Settings = lazy(() => import('@/components/Settings'));
 
 function Spinner() {
@@ -81,6 +82,7 @@ function AnimatedRoutes() {
             <Route path="/product-database" element={<Suspense fallback={<Spinner />}><Page><ProductDatabase /></Page></Suspense>} />
             <Route path="/claimed-serials" element={<Suspense fallback={<Spinner />}><Page><ClaimedSerials /></Page></Suspense>} />
             <Route path="/notifications" element={<Suspense fallback={<Spinner />}><Page><Notifications /></Page></Suspense>} />
+            <Route path="/inbox" element={<Suspense fallback={<Spinner />}><Page><Inbox /></Page></Suspense>} />
             <Route path="/settings" element={<Suspense fallback={<Spinner />}><Page><Settings /></Page></Suspense>} />
           </Route>
         </Route>
