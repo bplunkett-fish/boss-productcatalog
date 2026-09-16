@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { isOptedIn } from "../../shared/notifications.ts";
 
 // Daily maintenance reminder job (invoked by the "Maintenance Reminders"
 // workflow). For every catalog item whose maintenance is due within 7 days
@@ -23,6 +24,9 @@ export default async function(req) {
     const products = await svc.entities.Product.list("-updated_date", 1000);
     const productMap = {};
     for (const p of products) productMap[p.model_number] = p;
+    const users = await svc.entities.User.list("-created_date", 1000);
+    const userMap = {};
+    for (const u of users) userMap[u.id] = u;
 
     const today = new Date(); today.setHours(0, 0, 0, 0);
     let sent = 0;
@@ -33,6 +37,7 @@ export default async function(req) {
       const due = new Date(item.maintenance_due_date + "T00:00:00");
       const diffDays = Math.round((due - today) / 86400000);
       if (diffDays > 7) { skipped++; continue; }
+      if (!isOptedIn(userMap[item.created_by_id], "Product Maintenance")) { skipped++; continue; }
 
       const product = productMap[item.model_number];
       const name = product?.product_name || item.model_number || "your equipment";

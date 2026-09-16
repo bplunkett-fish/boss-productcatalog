@@ -7,6 +7,14 @@
         "admin",
         "user"
       ]
+    },
+    "notification_preferences": {
+      "type": "array",
+      "title": "Notification Preferences",
+      "description": "Notification categories the user has opted into. Empty or unset means all categories are enabled.",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

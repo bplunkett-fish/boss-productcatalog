@@ -1,0 +1,44 @@
+{
+  "name": "Scheduled Notifications",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "scheduled_notifications",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "process": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "processScheduledNotifications"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Process scheduled notifications",
+            "description": "Send due push notifications"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "interval",
+      "cron_expression": null,
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": 5,
+      "interval_unit": "minutes",
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Every 5 minutes, sends any admin-scheduled push notifications that have reached their send time to users who opted into the notification's category."
+}

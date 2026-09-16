@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut } from "lucide-react";
+import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut, Bell } from "lucide-react";
+import { NOTIFICATION_CATEGORIES } from "@/lib/notificationCategories";
 import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,25 @@ export default function Settings() {
   const [deleting, setDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [error, setError] = useState("");
+  const [prefs, setPrefs] = useState(null);
+  const [prefSaving, setPrefSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const p = user.notification_preferences;
+      setPrefs(!p || p.length === 0 ? NOTIFICATION_CATEGORIES : p);
+    }
+  }, [user]);
+
+  const togglePref = async (cat) => {
+    if (!prefs) return;
+    const next = prefs.includes(cat) ? prefs.filter((c) => c !== cat) : [...prefs, cat];
+    setPrefs(next);
+    setPrefSaving(true);
+    try { await base44.auth.updateMe({ notification_preferences: next }); }
+    catch { /* ignore — reflects on next load */ }
+    finally { setPrefSaving(false); }
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -93,6 +113,36 @@ export default function Settings() {
               );
             })}
           </div>
+        </section>
+
+        {/* Notifications */}
+        <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Bell className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold text-foreground">Notification preferences</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">Choose which push notification categories you receive. New users receive all by default.</p>
+          <div className="space-y-2">
+            {NOTIFICATION_CATEGORIES.map((cat) => {
+              const on = (prefs || []).includes(cat);
+              return (
+                <button
+                  key={cat}
+                  onClick={() => togglePref(cat)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 p-3 rounded-xl border transition-colors min-h-11 text-left",
+                    on ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
+                  )}
+                >
+                  <span className="text-sm font-medium text-foreground">{cat}</span>
+                  <span className={cn("w-10 h-6 rounded-full transition-colors relative shrink-0", on ? "bg-primary" : "bg-muted-foreground/30")}>
+                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", on ? "left-[18px]" : "left-0.5")} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {prefSaving && <p className="text-xs text-muted-foreground mt-2">Saving…</p>}
         </section>
 
         {/* Danger zone */}

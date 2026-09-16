@@ -1,0 +1,71 @@
+{
+  "name": "ScheduledNotification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category",
+      "enum": [
+        "General",
+        "Product Maintenance",
+        "Marketing & Advertising",
+        "Important Updates"
+      ]
+    },
+    "send_at": {
+      "type": "string",
+      "title": "Send At",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "pending",
+        "sent"
+      ],
+      "default": "pending"
+    },
+    "sent_count": {
+      "type": "number",
+      "title": "Sent Count",
+      "default": 0
+    }
+  },
+  "required": [
+    "title",
+    "content",
+    "category",
+    "send_at"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

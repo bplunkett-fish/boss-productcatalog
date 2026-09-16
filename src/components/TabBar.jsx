@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home as HomeIcon, Database, Settings as SettingsIcon, Hash } from "lucide-react";
+import { Home as HomeIcon, Database, Settings as SettingsIcon, Hash, Bell } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,7 @@ function buildTabs(user) {
   if (user?.role === "admin") {
     tabs.push({ label: "Database", path: "/product-database", icon: Database, match: (p) => p.startsWith("/product-database") });
     tabs.push({ label: "Serials", path: "/claimed-serials", icon: Hash, match: (p) => p.startsWith("/claimed-serials") });
+    tabs.push({ label: "Alerts", path: "/notifications", icon: Bell, match: (p) => p.startsWith("/notifications") });
   }
   tabs.push({ label: "Settings", path: "/settings", icon: SettingsIcon, match: (p) => p.startsWith("/settings") });
   return tabs;
