@@ -70,6 +70,7 @@ export default function ProductEditor({ open, product, onClose, onSave }) {
         product_description: product?.product_description || "",
         category: product?.category || "",
         manufacturer: product?.manufacturer || "",
+        service_interval: product?.service_interval || "",
         image_url: product?.image_url || "",
         manuals: product?.manuals || [],
         wiring_diagrams: product?.wiring_diagrams || [],
@@ -125,6 +126,10 @@ export default function ProductEditor({ open, product, onClose, onSave }) {
         <div>
           <Label>Manufacturer</Label>
           <Input value={form.manufacturer} onChange={(e) => set("manufacturer", e.target.value)} className="mt-1" />
+        </div>
+        <div className="sm:col-span-2">
+          <Label>Service interval</Label>
+          <Input value={form.service_interval} onChange={(e) => set("service_interval", e.target.value)} placeholder="e.g. Every 6 months, 500 hours, Annually" className="mt-1" />
         </div>
         <div className="sm:col-span-2">
           <ImageField value={form.image_url} onChange={(v) => set("image_url", v)} />

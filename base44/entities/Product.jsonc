@@ -27,6 +27,11 @@
       "title": "Image URL",
       "format": "uri"
     },
+    "service_interval": {
+      "type": "string",
+      "title": "Service Interval",
+      "description": "How often preventative maintenance should be performed (e.g. 'Every 6 months', '500 hours', 'Annually')."
+    },
     "manuals": {
       "type": "array",
       "title": "Manuals",

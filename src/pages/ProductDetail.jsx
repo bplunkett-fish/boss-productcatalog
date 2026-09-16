@@ -101,6 +101,7 @@ export default function ProductDetail() {
               <DetailField label="Serial number" value={item.serial_number} mono />
               <DetailField label="Model" value={item.model_number} mono />
               <DetailField label="Category" value={category} />
+              <DetailField label="Service interval" value={product?.service_interval} />
             </div>
 
             {description && (
