@@ -105,7 +105,20 @@ async function safeFetch(rawUrl, maxRedirects = 5) {
   let current = rawUrl;
   for (let i = 0; i <= maxRedirects; i++) {
     await assertPublicUrl(current);
-    const res = await fetch(current, { redirect: 'manual' });
+    const res = await fetch(current, {
+      redirect: 'manual',
+      headers: {
+        // Some hosts (e.g. WordPress security plugins) serve an HTML page to
+        // non-browser clients; send a full browser-like header set so direct
+        // file links return the actual file.
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/msword,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+      },
+    });
     if (res.status >= 300 && res.status < 400) {
       const loc = res.headers.get('location');
       if (!loc) return res;
@@ -135,13 +148,22 @@ export default async function(req) {
     const blob = await res.blob();
     const type = blob.type || 'application/octet-stream';
     const urlPe = urlPathExt(url);
-    // A document URL that returns HTML means we got a preview/viewer/login page,
-    // not the actual file — refuse rather than store a broken blank HTML file.
+    // A document URL that returns HTML usually means we got a preview/viewer/
+    // login page, not the file. Sniff the first byte: real .doc/.docx binaries
+    // don't start with '<', so only reject when the payload is actually HTML.
     if (urlPe && KNOWN_DOC_EXTS.has(urlPe) && type.startsWith('text/html')) {
-      return Response.json(
-        { error: `This URL returned an HTML page instead of a .${urlPe} file. Paste a direct download link to the file, not a preview or viewer page.` },
-        { status: 422 }
-      );
+      const buf = new Uint8Array(await blob.arrayBuffer());
+      const firstNonSpace = buf.find(b => b !== 0x20 && b !== 0x09 && b !== 0x0a && b !== 0x0d);
+      if (firstNonSpace === 0x3C) { // '<' => a real HTML page
+        return Response.json(
+          { error: `This URL returned an HTML page instead of a .${urlPe} file. Paste a direct download link to the file, not a preview or viewer page.` },
+          { status: 422 }
+        );
+      }
+      // Mislabeled binary — store it with the correct extension from the URL.
+      const file = new File([buf], `resource-${Date.now()}.${urlPe}`, { type: 'application/octet-stream' });
+      const { file_url } = await base44.asServiceRole.integrations.Core.UploadPublicFile({ file });
+      return Response.json({ file_url, file_type: urlPe });
     }
     const ext = deriveExt(type, url);
     const file = new File([blob], `resource-${Date.now()}.${ext}`, { type });
