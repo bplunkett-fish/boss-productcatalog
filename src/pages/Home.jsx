@@ -6,6 +6,7 @@ import { Loader2, LogOut, Database, Settings as SettingsIcon } from "lucide-reac
 import SerialLookup from "@/components/SerialLookup";
 import ManualSearch from "@/components/ManualSearch";
 import CatalogGrid from "@/components/CatalogGrid";
+import MaintenanceDueBanner from "@/components/MaintenanceDueBanner";
 import PullToRefresh from "@/components/PullToRefresh";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "@/components/ui/use-toast";
@@ -106,6 +107,13 @@ export default function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-28 md:pb-12">
+        {/* Maintenance due alert */}
+        {items && items.length > 0 && (
+          <div className="mb-6">
+            <MaintenanceDueBanner items={items} />
+          </div>
+        )}
+
         {/* Hero / lookup */}
         <section className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
