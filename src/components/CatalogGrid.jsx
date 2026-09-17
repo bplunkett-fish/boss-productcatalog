@@ -1,10 +1,35 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trash2, ArrowRight, FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart } from "lucide-react";
+import { Trash2, ArrowRight, FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, AlertTriangle } from "lucide-react";
+import { parseISO, differenceInCalendarDays } from "date-fns";
 
 function countBadge(items) {
   return Array.isArray(items) ? items.length : 0;
+}
+
+// Returns a maintenance status descriptor for a catalog item, or null when
+// there is nothing actionable (no due date, or reminders silenced).
+function maintenanceStatus(item) {
+  if (!item.maintenance_due_date || item.maintenance_silenced) return null;
+  const due = parseISO(item.maintenance_due_date);
+  due.setHours(0, 0, 0, 0);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const days = differenceInCalendarDays(due, now);
+  if (days < 0) {
+    return {
+      tone: "red",
+      label: `${Math.abs(days)} ${Math.abs(days) === 1 ? "day" : "days"} overdue`,
+    };
+  }
+  if (days <= 7) {
+    return {
+      tone: "amber",
+      label: days === 0 ? "Due today" : `Due in ${days} ${days === 1 ? "day" : "days"}`,
+    };
+  }
+  return null;
 }
 
 export default function CatalogGrid({ items, onDelete, deletingId }) {
@@ -28,13 +53,20 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
         const p = item.product;
         const name = p?.product_name || `Model ${item.model_number}`;
         const image = p?.image_url;
+        const maint = maintenanceStatus(item);
         return (
           <div
             key={item.id}
-            className="group rounded-2xl bg-card border border-border overflow-hidden hover:shadow-lg hover:border-foreground/20 transition-all duration-200 flex flex-col"
+            className={`group rounded-2xl bg-card overflow-hidden hover:shadow-lg transition-all duration-200 flex flex-col border ${
+              maint?.tone === "red"
+                ? "border-red-300 dark:border-red-800"
+                : maint?.tone === "amber"
+                  ? "border-amber-300 dark:border-amber-800"
+                  : "border-border hover:border-foreground/20"
+            }`}
           >
             <Link to={`/product/${item.id}`} className="block">
-              <div className="aspect-[4/3] bg-muted overflow-hidden">
+              <div className="relative aspect-[4/3] bg-muted overflow-hidden">
                 {image ? (
                   <img
                     src={image}
@@ -45,6 +77,16 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
                   <div className="w-full h-full flex items-center justify-center">
                     <PackageIcon />
                   </div>
+                )}
+                {maint && (
+                  <span
+                    className={`absolute top-0 left-0 inline-flex items-center gap-1.5 text-xs font-semibold text-white px-2.5 py-1 rounded-br-lg shadow-sm ${
+                      maint.tone === "red" ? "bg-red-600" : "bg-amber-500"
+                    }`}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {maint.label}
+                  </span>
                 )}
               </div>
             </Link>
