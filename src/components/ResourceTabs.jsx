@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, ExternalLink, Download, ChevronDown, BookOpen } from "lucide-react";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 const TABS = [
   { key: "manuals", label: "Manuals", icon: FileText },
@@ -126,13 +127,9 @@ function VideoList({ items }) {
       {items.map((v, i) => (
         <a key={i} href={v.url} target="_blank" rel="noopener noreferrer" className="group">
           <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
-            {v.thumbnail ? (
-              <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Video className="w-10 h-10 text-muted-foreground/50" />
-              </div>
-            )}
+            <div className="w-full h-full group-hover:scale-105 transition-transform duration-300">
+              <VideoThumbnail url={v.url} thumbnail={v.thumbnail} alt={v.title} />
+            </div>
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
               <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
                 <svg className="w-6 h-6 text-foreground ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
