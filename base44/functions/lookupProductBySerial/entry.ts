@@ -18,8 +18,19 @@ async function lookupModelNumber(base44, serialNumber) {
   const sageApiUrl = secrets.get("SAGE_API_URL");
   const sageApiKey = secrets.get("SAGE_API_KEY");
 
+  // Only call SAGE when the URL is a valid http(s) endpoint. A placeholder
+  // value (e.g. "TESTING") would otherwise build an invalid fetch URL.
+  let isSageConfigured = false;
   if (sageApiUrl && sageApiKey) {
-    const res = await fetch(`${sageApiUrl}/serials/${encodeURIComponent(serialNumber)}`, {
+    try {
+      const parsed = new URL(sageApiUrl);
+      isSageConfigured = parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      isSageConfigured = false;
+    }
+  }
+  if (isSageConfigured) {
+    const res = await fetch(`${sageApiUrl.replace(/\/$/, "")}/serials/${encodeURIComponent(serialNumber)}`, {
       headers: { "Authorization": `Bearer ${sageApiKey}` }
     });
     if (res.status === 404) return null;
