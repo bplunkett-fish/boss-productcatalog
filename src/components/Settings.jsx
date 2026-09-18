@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut, Bell } from "lucide-react";
+import ChangePassword from "@/components/ChangePassword";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notificationCategories";
 import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "next-themes";
@@ -144,6 +145,9 @@ export default function Settings() {
           </div>
           {prefSaving && <p className="text-xs text-muted-foreground mt-2">Saving…</p>}
         </section>
+
+        {/* Change password */}
+        <ChangePassword />
 
         {/* Danger zone */}
         <section className="rounded-2xl bg-card border border-destructive/30 p-5 sm:p-6">
