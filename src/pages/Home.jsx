@@ -24,7 +24,7 @@ export default function Home() {
       // Fetch the catalog and the product database in parallel, then join by
       // model_number client-side.
       const [list, products] = await Promise.all([
-      base44.entities.CatalogItem.list("-created_date", 100),
+      base44.entities.CatalogItem.filter({ created_by_id: user?.id }, "-created_date", 100),
       base44.entities.Product.list("-updated_date", 200)]
       );
       const productMap = {};
