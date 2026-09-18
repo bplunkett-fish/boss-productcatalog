@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Plus, Trash2, Pencil, Search, Package, ShieldAlert } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, Pencil, Search, Package, ShieldAlert, LayoutGrid, List } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import ProductEditor from "@/components/ProductEditor";
 import ProductCsvImport from "@/components/ProductCsvImport";
@@ -22,6 +22,7 @@ export default function ProductDatabase() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [view, setView] = useState("grid");
 
   const load = useCallback(async () => {
     try {
@@ -104,10 +105,14 @@ export default function ProductDatabase() {
         <section>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <h2 className="text-xl font-semibold text-foreground">Models</h2>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search models…" className="pl-9 h-10 w-full sm:w-64" />
+              </div>
+              <div className="inline-flex p-1 rounded-xl bg-muted border border-border shrink-0" role="group" aria-label="View mode">
+                <button onClick={() => setView("grid")} aria-pressed={view === "grid"} aria-label="Grid view" className={`px-2.5 h-8 rounded-lg transition-colors ${view === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}><LayoutGrid className="w-4 h-4" /></button>
+                <button onClick={() => setView("list")} aria-pressed={view === "list"} aria-label="List view" className={`px-2.5 h-8 rounded-lg transition-colors ${view === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}><List className="w-4 h-4" /></button>
               </div>
               <Button onClick={handleNew} className="h-10"><Plus className="w-4 h-4 mr-1" /> New model</Button>
             </div>
@@ -120,7 +125,7 @@ export default function ProductDatabase() {
               <p className="text-muted-foreground">No products in the database yet.</p>
               <p className="text-sm text-muted-foreground mt-1">Add a model manually or import a CSV above.</p>
             </div>
-          ) : (
+          ) : view === "grid" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filtered.map(p => (
                 <div key={p.id} className="rounded-2xl bg-card border border-border overflow-hidden flex flex-col">
@@ -144,6 +149,26 @@ export default function ProductDatabase() {
                       </Button>
                     </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
+              {filtered.map(p => (
+                <div key={p.id} className="flex items-center gap-3 p-3 sm:p-4 hover:bg-muted/50 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-foreground truncate">{p.product_name}</h3>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{p.category || "—"}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">{p.model_number} · {p.manufacturer || "—"}</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="shrink-0" onClick={() => handleEdit(p)} aria-label={`Edit ${p.product_name}`}>
+                    <Pencil className="w-4 h-4 sm:mr-1" /><span className="hidden sm:inline">Edit</span>
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 shrink-0 h-9 w-9" onClick={() => handleDelete(p)} disabled={deletingId === p.id} aria-label={`Delete ${p.product_name}`}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               ))}
             </div>
