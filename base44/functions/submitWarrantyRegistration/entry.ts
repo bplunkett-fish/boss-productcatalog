@@ -1,6 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { secrets } from 'base44:runtime';
 
+// Strip control characters (incl. newlines/tabs) and collapse whitespace so
+// user-controlled values can't inject line breaks into the email subject/body
+// or otherwise spoof the warranty submission. Optional `maxLen` truncates.
+function sanitize(value, maxLen) {
+  let v = (value == null ? '' : String(value))
+    .replace(/[\u0000-\u001F\u007F\u2028\u2029]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (maxLen && v.length > maxLen) v = v.slice(0, maxLen);
+  return v;
+}
+
 // Submits a lifetime warranty registration for a cataloged product.
 // Today: the registration is delivered by email.
 // Future: the same `registration` payload can be pushed to an external database
@@ -15,22 +27,22 @@ export default async function(req) {
     const body = await req.json().catch(() => ({}));
 
     // Product context (read-only, comes from the catalog item / product record).
-    const serialNumber = (body.serial_number || '').trim();
-    const modelNumber = (body.model_number || '').trim();
-    const productName = (body.product_name || '').trim();
+    const serialNumber = sanitize(body.serial_number, 100);
+    const modelNumber = sanitize(body.model_number, 100);
+    const productName = sanitize(body.product_name, 200);
 
     // Registrant fields.
-    const name = (body.name || '').trim();
-    const email = (body.email || '').trim().toLowerCase();
-    const phone = (body.phone || '').trim();
-    const street = (body.street || '').trim();
-    const city = (body.city || '').trim();
-    const state = (body.state || '').trim();
-    const zip = (body.zip || '').trim();
-    const purchaseDate = (body.purchase_date || '').trim();
-    const purchaseLocation = (body.purchase_location || '').trim();
-    const installDate = (body.install_date || '').trim();
-    const notes = (body.notes || '').trim();
+    const name = sanitize(body.name, 150);
+    const email = sanitize(body.email, 254).toLowerCase();
+    const phone = sanitize(body.phone, 40);
+    const street = sanitize(body.street, 200);
+    const city = sanitize(body.city, 100);
+    const state = sanitize(body.state, 100);
+    const zip = sanitize(body.zip, 20);
+    const purchaseDate = sanitize(body.purchase_date, 40);
+    const purchaseLocation = sanitize(body.purchase_location, 200);
+    const installDate = sanitize(body.install_date, 40);
+    const notes = sanitize(body.notes, 2000);
 
     if (!name || !email || !serialNumber || !modelNumber) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
