@@ -57,7 +57,7 @@ export default function QrGenerator() {
         QRCode.toDataURL(claimUrl(s), {
           errorCorrectionLevel: "M",
           margin: 2,
-          width: 1024,
+          width: 2400,
           color: { dark: "#000000", light: "#00000000" },
         }),
       ]);
@@ -88,13 +88,12 @@ export default function QrGenerator() {
   };
 
   const handleEmail = async () => {
-    if (!svg || !pngUrl) return;
+    if (!pngUrl) return;
     setEmailing(true);
     try {
       const pngBase64 = pngUrl.split(",")[1];
       const res = await base44.functions.invoke("emailQrCode", {
         serial_number: serial.trim(),
-        svg_string: svg,
         png_base64: pngBase64,
       });
       if (res.data?.status === "sent") {
@@ -180,7 +179,7 @@ export default function QrGenerator() {
               )}
             </Button>
             <p className="text-xs text-muted-foreground text-center">
-              PNG and SVG are bundled into a zip and sent as a download link (email services block zip attachments).
+              A high-resolution PNG (2400×2400, transparent background) is attached to the email.
             </p>
           </div>
         )}
