@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut, Bell } from "lucide-react";
 import ChangePassword from "@/components/ChangePassword";
+import ProfileEditor from "@/components/ProfileEditor";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notificationCategories";
 import { useAuth } from "@/lib/AuthContext";
 import { useTheme } from "next-themes";
@@ -31,6 +32,7 @@ export default function Settings() {
   const [error, setError] = useState("");
   const [prefs, setPrefs] = useState(null);
   const [prefSaving, setPrefSaving] = useState(false);
+  const displayName = [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() || user?.full_name || "Account";
 
   useEffect(() => {
     if (user) {
@@ -80,16 +82,22 @@ export default function Settings() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12 space-y-8">
         {/* Account */}
         <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <UserCircle className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary overflow-hidden flex items-center justify-center shrink-0">
+              {user?.profile_picture ? (
+                <img src={user.profile_picture} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle className="w-6 h-6 text-primary-foreground" />
+              )}
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-foreground truncate">{user?.full_name || "Account"}</p>
+              <p className="font-semibold text-foreground truncate">{displayName}</p>
               <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
         </section>
+
+        <ProfileEditor />
 
         {/* Appearance */}
         <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">

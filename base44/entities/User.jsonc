@@ -15,6 +15,27 @@
       "items": {
         "type": "string"
       }
+    },
+    "first_name": {
+      "type": "string",
+      "title": "First Name"
+    },
+    "last_name": {
+      "type": "string",
+      "title": "Last Name"
+    },
+    "phone_number": {
+      "type": "string",
+      "title": "Phone Number"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    },
+    "profile_picture": {
+      "type": "string",
+      "title": "Profile Picture",
+      "format": "uri"
     }
   },
   "required": [
