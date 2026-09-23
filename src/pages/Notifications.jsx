@@ -94,13 +94,13 @@ export default function Notifications() {
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">Push notifications</h1>
+          <h1 className="text-lg font-semibold text-foreground">Messaging</h1>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12 space-y-6">
         <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-1">Compose notification</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-1">Compose push notification</h2>
           <p className="text-sm text-muted-foreground mb-4">Sends a push to every user who opted into the chosen category.</p>
           <div className="space-y-4">
             <div>
@@ -139,7 +139,7 @@ export default function Notifications() {
         </section>
 
         <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">History &amp; scheduled</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Push history &amp; scheduled</h2>
           {list === null ? (
             <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
           ) : list.length === 0 ? (
