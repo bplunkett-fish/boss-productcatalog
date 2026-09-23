@@ -75,7 +75,7 @@ export default function QrGenerator() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `qr-${safeName(serial)}.svg`;
+    a.download = `MyBOSS-QR-${safeName(serial)}.svg`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -83,7 +83,7 @@ export default function QrGenerator() {
   const downloadPng = () => {
     const a = document.createElement("a");
     a.href = pngUrl;
-    a.download = `qr-${safeName(serial)}.png`;
+    a.download = `MyBOSS-QR-${safeName(serial)}.png`;
     a.click();
   };
 
@@ -91,15 +91,11 @@ export default function QrGenerator() {
     if (!svg || !pngUrl) return;
     setEmailing(true);
     try {
-      // SVG can't be sent as an email attachment (unsupported extension), so
-      // upload it to public storage and include a download link in the body.
-      const svgBlob = new File([svg], `qr-${safeName(serial)}.svg`, { type: "image/svg+xml" });
-      const { file_url: svgUrl } = await base44.integrations.Core.UploadPublicFile({ file: svgBlob });
       const pngBase64 = pngUrl.split(",")[1];
       const res = await base44.functions.invoke("emailQrCode", {
         serial_number: serial.trim(),
+        svg_string: svg,
         png_base64: pngBase64,
-        svg_url: svgUrl,
       });
       if (res.data?.status === "sent") {
         toast({ title: "Email sent", description: `QR code sent to ${user.email}` });
@@ -139,12 +135,13 @@ export default function QrGenerator() {
             <Input
               id="serial"
               value={serial}
-              onChange={(e) => setSerial(e.target.value)}
-              placeholder="Enter any serial number…"
+              onChange={(e) => setSerial(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
+              placeholder="Enter a serial number…"
               className="h-12 text-base font-mono"
+              pattern="[A-Za-z0-9]*"
               autoFocus
             />
-            <p className="text-xs text-muted-foreground">No ERP validation — the QR will encode a claim link for this serial.</p>
+            <p className="text-xs text-muted-foreground">Alphanumeric characters only (letters and numbers). No ERP validation — the QR encodes a claim link for this serial.</p>
           </div>
           <Button type="submit" className="w-full h-11" disabled={generating || !serial.trim()}>
             {generating ? (
@@ -183,7 +180,7 @@ export default function QrGenerator() {
               )}
             </Button>
             <p className="text-xs text-muted-foreground text-center">
-              PNG is attached; SVG is included as a download link (email clients don't allow SVG attachments).
+              PNG and SVG are bundled into a zip and sent as a download link (email services block zip attachments).
             </p>
           </div>
         )}
