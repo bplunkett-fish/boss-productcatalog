@@ -26,6 +26,7 @@ const ClaimedSerials = lazy(() => import('@/pages/ClaimedSerials'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const Inbox = lazy(() => import('@/pages/Inbox'));
 const Settings = lazy(() => import('@/components/Settings'));
+const Claim = lazy(() => import('@/pages/Claim'));
 
 function Spinner() {
   return (
@@ -78,6 +79,7 @@ function AnimatedRoutes() {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Suspense fallback={<Spinner />}><Page><Home /></Page></Suspense>} />
+            <Route path="/claim" element={<Suspense fallback={<Spinner />}><Page><Claim /></Page></Suspense>} />
             <Route path="/product/:id" element={<Suspense fallback={<Spinner />}><Page><ProductDetail /></Page></Suspense>} />
             <Route path="/product-database" element={<Suspense fallback={<Spinner />}><Page><ProductDatabase /></Page></Suspense>} />
             <Route path="/claimed-serials" element={<Suspense fallback={<Spinner />}><Page><ClaimedSerials /></Page></Suspense>} />
