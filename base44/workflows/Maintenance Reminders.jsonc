@@ -17,20 +17,20 @@
           "then": "end",
           "x-base44": {
             "title": "Send maintenance reminders",
-            "description": "Daily push notifications"
+            "description": "Checked hourly; sends at 9am local"
           }
         }
       }
     ]
   },
-  "description": "Sends daily push notifications for upcoming or overdue preventative maintenance, starting one week before the due date, until the owner silences reminders or updates the maintenance date.",
+  "description": "Sends maintenance push notifications around 9am in each owner's local time, once every 24 hours, for upcoming or overdue preventative maintenance. Alerts start one week before the due date and continue until the owner silences reminders or updates the maintenance date. Priority is normal while the due date is ahead and critical on the due day or once overdue.",
   "trigger": {
     "condition": null,
     "config": {
       "trigger_type": "scheduled",
       "events": [],
       "schedule_mode": "recurring",
-      "cron_expression": "0 8 * * *",
+      "cron_expression": "0 * * * *",
       "one_time_date": null,
       "timezone": "America/Indiana/Indianapolis",
       "interval_value": null,

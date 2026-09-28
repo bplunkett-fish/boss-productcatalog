@@ -13,6 +13,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 // Home is lazy-loaded below.
 import TabBar, { DesktopNav } from '@/components/TabBar';
+import TimezoneSync from '@/components/TimezoneSync';
 
 // Lazy-loaded routes (code-splitting for performance).
 const Home = lazy(() => import('@/pages/Home'));
@@ -61,6 +62,7 @@ function Page({ children }) {
 function AppLayout() {
   return (
     <>
+      <TimezoneSync />
       <DesktopNav />
       <Outlet />
       <TabBar />

@@ -1,16 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { isOptedIn } from "../../shared/notifications.ts";
 
-// Daily maintenance reminder job (invoked by the "Maintenance Reminders"
+// Maintenance reminder job (invoked hourly by the "Maintenance Reminders"
 // workflow). For every catalog item whose maintenance is due within 7 days
-// (or already overdue), delivers an in-app alert (AppNotification) and a
-// native push to the owner — repeating daily (push) until they silence
-// reminders or update the maintenance date. The in-app alert is created
-// once per cycle (no duplicates while an unread one exists for the item).
+// (or already overdue), it alerts the owner around 9am in their local time:
+// an in-app alert (AppNotification) plus a native push. Each item's push is
+// sent at most once every 24 hours. Priority follows the time remaining:
+// "normal" while the due date is still ahead, "critical" on the due day or
+// once it is overdue.
 //
 // Runs with the service role (no end user), so it can read all catalog items
 // and push to any owner. Direct calls by a signed-in non-admin are rejected.
 const APP_URL = "https://hypersonic-sync-your-gear.base44.app";
+const DEFAULT_TZ = "America/Indiana/Indianapolis";
+const SEND_HOUR = 9; // 9am in the owner's local time
+// Safety guard against duplicate sends within the same day; the 9am-local gate
+// already limits delivery to once per day per item.
+const MIN_GAP_MS = 20 * 60 * 60 * 1000;
+
+// Hour of day (0-23) right now in the given IANA timezone, or null if invalid.
+function localHour(timeZone) {
+  try {
+    const hour = new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hour12: false })
+      .formatToParts(new Date())
+      .find((p) => p.type === "hour")?.value;
+    const n = Number(hour);
+    return Number.isFinite(n) ? n % 24 : null;
+  } catch {
+    return null;
+  }
+}
 
 export default async function(req) {
   try {
@@ -34,6 +53,7 @@ export default async function(req) {
     for (const u of users) userMap[u.id] = u;
 
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    const now = Date.now();
     let sent = 0;
     let skipped = 0;
 
@@ -42,8 +62,14 @@ export default async function(req) {
       const due = new Date(item.maintenance_due_date + "T00:00:00");
       const diffDays = Math.round((due - today) / 86400000);
       if (diffDays > 7) { skipped++; continue; }
-      if (!isOptedIn(userMap[item.created_by_id], "Product Maintenance")) { skipped++; continue; }
 
+      const owner = userMap[item.created_by_id];
+      if (!isOptedIn(owner, "Product Maintenance")) { skipped++; continue; }
+
+      // Only deliver around 9am in the owner's local time (workflow runs hourly).
+      if (localHour(owner?.timezone || DEFAULT_TZ) !== SEND_HOUR) { skipped++; continue; }
+
+      const priority = diffDays <= 0 ? "critical" : "normal";
       const product = productMap[item.model_number];
       const name = product?.product_name || item.model_number || "your equipment";
       const dueStr = item.maintenance_due_date;
@@ -51,17 +77,22 @@ export default async function(req) {
       const content = diffDays <= 0
         ? `Maintenance is overdue for ${name} (was due ${dueStr}). Last serviced ${lastStr}. Update the date or silence reminders.`
         : `Maintenance for ${name} is due in ${diffDays} day${diffDays === 1 ? "" : "s"} (${dueStr}). Last serviced ${lastStr}.`;
+      const title = priority === "critical" ? "Critical maintenance reminder" : "Maintenance reminder";
       const actionUrl = `${APP_URL}/product/${item.id}`;
 
-      // In-app alert: one per cycle — skip if an unread one already exists.
+      // In-app alert: keep one unread per item, but always surface an upgrade
+      // to "critical" even if a lower-priority unread one is still present.
       try {
         const existing = await svc.entities.AppNotification.filter({ ref_id: item.id, read: false }, "-created_date", 50);
-        if (!existing || existing.length === 0) {
+        const hasCritical = (existing || []).some((n) => n.priority === "critical");
+        const needsCreate = !existing || existing.length === 0 || (priority === "critical" && !hasCritical);
+        if (needsCreate) {
           await svc.entities.AppNotification.create({
             user_id: item.created_by_id,
-            title: "Maintenance reminder",
+            title,
             content,
             category: "Product Maintenance",
+            priority,
             ref_id: item.id,
             read: false,
             action_url: actionUrl
@@ -69,14 +100,19 @@ export default async function(req) {
         }
       } catch (e) { /* ignore in-app create failures */ }
 
+      // Push: at most once every 24 hours per item.
+      const lastSent = item.last_reminder_sent_at ? new Date(item.last_reminder_sent_at).getTime() : 0;
+      if (lastSent && now - lastSent < MIN_GAP_MS) { skipped++; continue; }
+
       try {
         await svc.integrations.Core.SendPushNotification({
           user_id: item.created_by_id,
-          title: "Maintenance reminder",
+          title,
           content,
           action_label: "View details",
           action_url: actionUrl
         });
+        await svc.entities.CatalogItem.update(item.id, { last_reminder_sent_at: new Date().toISOString() });
         sent++;
       } catch (e) {
         // Push may fail without a native mobile build — the in-app alert

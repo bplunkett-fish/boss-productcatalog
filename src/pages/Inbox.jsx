@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Bell, CheckCheck, Trash2, ExternalLink } from "lucide-react";
+import { Loader2, ArrowLeft, Bell, CheckCheck, Trash2, ExternalLink, AlertTriangle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notificationCategories";
 import moment from "moment";
@@ -97,11 +97,16 @@ export default function Inbox() {
             {list.map((n) => (
               <li
                 key={n.id}
-                className={`rounded-2xl border p-4 transition-colors ${n.read ? "bg-card border-border" : "bg-primary/5 border-primary/30"}`}
+                className={`rounded-2xl border p-4 transition-colors ${n.read ? "bg-card border-border" : n.priority === "critical" ? "bg-destructive/5 border-destructive/40" : "bg-primary/5 border-primary/30"}`}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
+                      {n.priority === "critical" && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">
+                          <AlertTriangle className="w-3 h-3" /> Critical
+                        </span>
+                      )}
                       {n.category && (
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_TONE[n.category] || "bg-muted text-muted-foreground"}`}>{n.category}</span>
                       )}

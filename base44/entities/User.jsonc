@@ -36,6 +36,11 @@
       "type": "string",
       "title": "Profile Picture",
       "format": "uri"
+    },
+    "timezone": {
+      "type": "string",
+      "title": "Timezone",
+      "description": "IANA timezone captured from the user's device, used to schedule notifications at the user's local time."
     }
   },
   "required": [

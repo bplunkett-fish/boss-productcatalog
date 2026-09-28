@@ -24,6 +24,12 @@
       "type": "boolean",
       "title": "Maintenance Reminders Silenced",
       "default": false
+    },
+    "last_reminder_sent_at": {
+      "type": "string",
+      "title": "Last Reminder Sent At",
+      "description": "Timestamp of the last maintenance push notification sent for this item, used to enforce a 24-hour minimum gap.",
+      "format": "date-time"
     }
   },
   "required": [

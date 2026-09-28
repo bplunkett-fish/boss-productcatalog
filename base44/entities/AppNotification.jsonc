@@ -18,6 +18,15 @@
       "type": "string",
       "title": "Category"
     },
+    "priority": {
+      "type": "string",
+      "title": "Priority",
+      "enum": [
+        "normal",
+        "critical"
+      ],
+      "default": "normal"
+    },
     "ref_id": {
       "type": "string",
       "title": "Reference ID"
