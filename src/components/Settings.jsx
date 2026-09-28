@@ -37,8 +37,10 @@ export default function Settings() {
 
   useEffect(() => {
     if (user) {
+      // No saved choice yet → every category on. A saved list is authoritative,
+      // including an empty one (everything turned off).
       const p = user.notification_preferences;
-      setPrefs(!p || p.length === 0 ? NOTIFICATION_CATEGORIES : p);
+      setPrefs(Array.isArray(p) ? p : NOTIFICATION_CATEGORIES);
     }
   }, [user]);
 
@@ -131,7 +133,7 @@ export default function Settings() {
             <Bell className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-lg font-semibold text-foreground">Notification preferences</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">Choose which push notification categories you receive. New users receive all by default.</p>
+          <p className="text-sm text-muted-foreground mb-4">Choose which push notification categories you receive. All categories are on by default, and your choices are kept until you change them.</p>
           <div className="space-y-2">
             {NOTIFICATION_CATEGORIES.map((cat) => {
               const on = (prefs || []).includes(cat);

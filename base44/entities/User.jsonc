@@ -17,7 +17,7 @@
     "notification_preferences": {
       "type": "array",
       "title": "Notification Preferences",
-      "description": "Notification categories the user has opted into. Empty or unset means all categories are enabled.",
+      "description": "Notification categories the user has opted into. Unset means the user has never saved a choice, so every category is enabled. Once saved, this list is authoritative: only the listed categories are delivered, and an empty list means all categories are off.",
       "items": {
         "type": "string"
       }

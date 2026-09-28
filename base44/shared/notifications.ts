@@ -8,9 +8,11 @@ export const CATEGORIES = [
   "Important Updates"
 ];
 
-// A user receives a category when they have no preferences set (default = all)
-// or when the category is explicitly in their preferences list.
+// Default: a user who has never saved a choice has no preferences stored, so
+// every category is enabled. Once they save a list, that list is authoritative —
+// including an empty list, which means they turned every category off.
 export function isOptedIn(user, category) {
   const prefs = user?.notification_preferences;
-  return !prefs || !Array.isArray(prefs) || prefs.length === 0 || prefs.includes(category);
+  if (!Array.isArray(prefs)) return true;
+  return prefs.includes(category);
 }
