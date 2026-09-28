@@ -18,6 +18,7 @@ export default function Home() {
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState(() => searchParams.get("detail") ? "manual" : "serial");
+  const [silencingId, setSilencingId] = useState(null);
 
   const loadCatalog = useCallback(async () => {
     try {
@@ -54,6 +55,27 @@ export default function Home() {
         description: err.response?.data?.error || err.message || "Something went wrong. The item was restored.",
         variant: "destructive"
       });
+    }
+  };
+
+  // Toggles maintenance reminders for a single catalog item. Silencing stops all
+  // alerts until the owner records a new maintenance date, which resets it.
+  const handleToggleSilence = async (item) => {
+    const next = !item.maintenance_silenced;
+    setSilencingId(item.id);
+    setItems((prev) => (prev || []).map((i) => (i.id === item.id ? { ...i, maintenance_silenced: next } : i)));
+    try {
+      await base44.entities.CatalogItem.update(item.id, { maintenance_silenced: next });
+      toast({ title: next ? "Reminders silenced" : "Reminders resumed" });
+    } catch (err) {
+      setItems((prev) => (prev || []).map((i) => (i.id === item.id ? { ...i, maintenance_silenced: !next } : i)));
+      toast({
+        title: "Could not update",
+        description: err.response?.data?.error || err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSilencingId(null);
     }
   };
 
@@ -169,7 +191,11 @@ export default function Home() {
             </div> :
 
           <PullToRefresh onRefresh={loadCatalog}>
-              <CatalogGrid items={items || []} onDelete={handleDelete} />
+              <CatalogGrid
+                items={items || []}
+                onDelete={handleDelete}
+                onToggleSilence={handleToggleSilence}
+                silencingId={silencingId} />
             </PullToRefresh>
           }
         </section>

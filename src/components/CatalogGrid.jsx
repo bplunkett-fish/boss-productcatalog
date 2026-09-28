@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trash2, ArrowRight, FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, AlertTriangle } from "lucide-react";
+import { Trash2, ArrowRight, FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, AlertTriangle, BellOff, Bell } from "lucide-react";
 import { parseISO, differenceInCalendarDays } from "date-fns";
 
 function countBadge(items) {
@@ -32,7 +32,7 @@ function maintenanceStatus(item) {
   return null;
 }
 
-export default function CatalogGrid({ items, onDelete, deletingId }) {
+export default function CatalogGrid({ items, onDelete, deletingId, onToggleSilence, silencingId }) {
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-20 px-6">
@@ -96,6 +96,11 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
                 <h3 className="font-semibold text-foreground mt-1 leading-snug hover:underline">{name}</h3>
               </Link>
               <p className="text-xs text-muted-foreground mt-1 font-mono">{item.serial_number}</p>
+              {item.maintenance_silenced && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md mt-2 self-start">
+                  <BellOff className="w-3 h-3" /> Reminders silenced
+                </span>
+              )}
 
               <div className="flex flex-wrap gap-1.5 mt-3">
                 <ResourceChip icon={FileText} count={countBadge(p?.manuals)} label="Manuals" />
@@ -111,6 +116,17 @@ export default function CatalogGrid({ items, onDelete, deletingId }) {
                   <Link to={`/product/${item.id}`}>
                     View details <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-border h-11 w-11 sm:h-9 sm:w-9"
+                  onClick={() => onToggleSilence(item)}
+                  disabled={silencingId === item.id}
+                  aria-label={item.maintenance_silenced ? `Resume maintenance reminders for ${name}` : `Silence maintenance reminders for ${name}`}
+                  title={item.maintenance_silenced ? "Resume reminders" : "Silence reminders"}
+                >
+                  {item.maintenance_silenced ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
                 </Button>
                 <Button
                   size="sm"
