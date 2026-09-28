@@ -3,8 +3,17 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Search, Users as UsersIcon } from "lucide-react";
 import UserRow from "@/components/users/UserRow";
 
-// Searchable list of everyone with access to the app.
-export default function UserList({ users, loading, currentUserId, onEdit }) {
+// Searchable list of everyone with access to the app, including deactivated
+// accounts so they can be found and reactivated later.
+export default function UserList({
+  users,
+  loading,
+  currentUserId,
+  busyId,
+  onEdit,
+  onToggleActive,
+  onRequestRemove,
+}) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -18,6 +27,8 @@ export default function UserList({ users, loading, currentUserId, onEdit }) {
     );
   }, [users, query]);
 
+  const activeCount = (users || []).filter((u) => u.is_active !== false).length;
+
   return (
     <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -27,7 +38,8 @@ export default function UserList({ users, loading, currentUserId, onEdit }) {
         </div>
         {!loading && (
           <span className="text-sm text-muted-foreground">
-            {(users || []).length} {(users || []).length === 1 ? "person" : "people"}
+            {activeCount} active
+            {(users || []).length > activeCount ? ` · ${(users || []).length - activeCount} deactivated` : ""}
           </span>
         )}
       </div>
@@ -59,8 +71,11 @@ export default function UserList({ users, loading, currentUserId, onEdit }) {
             <UserRow
               key={member.id}
               member={member}
-              onEdit={onEdit}
               isSelf={member.id === currentUserId}
+              busy={busyId === member.id}
+              onEdit={onEdit}
+              onToggleActive={onToggleActive}
+              onRequestRemove={onRequestRemove}
             />
           ))}
         </ul>

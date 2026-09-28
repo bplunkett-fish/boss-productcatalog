@@ -8,6 +8,12 @@
         "user"
       ]
     },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active",
+      "description": "Set to false to deactivate the account. A deactivated user keeps their history but loses access to the app until an admin reactivates them.",
+      "default": true
+    },
     "notification_preferences": {
       "type": "array",
       "title": "Notification Preferences",

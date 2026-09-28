@@ -7,6 +7,8 @@ import { ArrowLeft } from "lucide-react";
 import InviteUserCard from "@/components/users/InviteUserCard";
 import UserList from "@/components/users/UserList";
 import EditUserDialog from "@/components/users/EditUserDialog";
+import RemoveUserDialog from "@/components/users/RemoveUserDialog";
+import { toast } from "@/components/ui/use-toast";
 
 // Admin-only team page: invite people to the app and edit their role and
 // contact details without leaving the app.
@@ -15,6 +17,8 @@ export default function UserManagement() {
   const navigate = useNavigate();
   const [members, setMembers] = useState(null);
   const [editing, setEditing] = useState(null);
+  const [removing, setRemoving] = useState(null);
+  const [busyId, setBusyId] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -23,6 +27,47 @@ export default function UserManagement() {
       setMembers([]);
     }
   }, []);
+
+  // Deactivating keeps the person's data but blocks them from the app.
+  const toggleActive = async (member) => {
+    const reactivating = member.is_active === false;
+    setBusyId(member.id);
+    try {
+      await base44.entities.User.update(member.id, { is_active: reactivating });
+      toast({
+        title: reactivating ? "User reactivated" : "User deactivated",
+        description: reactivating
+          ? `${member.email} can use the app again.`
+          : `${member.email} can no longer access the app.`,
+      });
+      await load();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Could not update user",
+        description: err.response?.data?.error || err.message || "Please try again.",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // Removing deletes the account outright. Errors bubble to the dialog, which
+  // shows them inline and keeps the user in place.
+  const removeUser = async (member) => {
+    setBusyId(member.id);
+    try {
+      await base44.entities.User.delete(member.id);
+      setRemoving(null);
+      toast({
+        title: "User removed",
+        description: `${member.email} no longer has access.`,
+      });
+      await load();
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     if (user && user.role !== "admin") navigate("/", { replace: true });
@@ -56,11 +101,19 @@ export default function UserManagement() {
           users={members}
           loading={members === null}
           currentUserId={user.id}
+          busyId={busyId}
           onEdit={setEditing}
+          onToggleActive={toggleActive}
+          onRequestRemove={setRemoving}
         />
       </main>
 
       <EditUserDialog member={editing} onOpenChange={(open) => !open && setEditing(null)} onSaved={load} />
+      <RemoveUserDialog
+        member={removing}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        onConfirm={removeUser}
+      />
     </div>
   );
 }
