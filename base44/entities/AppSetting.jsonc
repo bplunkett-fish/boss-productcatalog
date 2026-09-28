@@ -7,6 +7,12 @@
       "title": "Allow New Registrations",
       "description": "When false, the sign-up screen only admits email addresses an admin has invited. A missing record means registration is open.",
       "default": true
+    },
+    "app_base_url": {
+      "type": "string",
+      "title": "App Web Address",
+      "description": "The address the app links back to \u2014 links in notifications and links encoded into QR codes (e.g. https://app.example.com). Update it whenever the app's domain changes.",
+      "format": "uri"
     }
   },
   "rls": {

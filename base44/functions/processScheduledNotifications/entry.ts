@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { isOptedIn } from "../../shared/notifications.ts";
+import { getAppBaseUrl } from "../../shared/appUrl.ts";
 
 // Processes admin-scheduled push notifications whose send time has arrived.
 // Invoked every few minutes by the "Scheduled Notifications" workflow, and
@@ -7,8 +8,6 @@ import { isOptedIn } from "../../shared/notifications.ts";
 // due notification it delivers an in-app alert (AppNotification) to every
 // opted-in user and attempts a native push for mobile. Runs with the service
 // role (no end user); direct calls by a signed-in non-admin are rejected.
-const APP_URL = "https://hypersonic-sync-your-gear.base44.app";
-
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -22,6 +21,7 @@ export default async function(req) {
     }
 
     const svc = base44.asServiceRole;
+    const APP_URL = await getAppBaseUrl(svc);
     const now = new Date();
     const pending = await svc.entities.ScheduledNotification.filter({ status: "pending" }, "-created_date", 200);
     const due = pending.filter(n => n.send_at && new Date(n.send_at) <= now);

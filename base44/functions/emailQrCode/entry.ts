@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { getAppBaseUrl } from "../../shared/appUrl.ts";
 
 // Emails a generated QR code (high-resolution transparent PNG) to the calling
 // admin's own address. The PNG is attached directly to the email.
@@ -21,7 +22,8 @@ export default async function(req) {
 
     const safeSerial = serial.replace(/[^A-Za-z0-9]/g, '');
     const filename = `MyBOSS-QR-${safeSerial}.png`;
-    const claimUrl = `https://hypersonic-sync-your-gear.base44.app/claim?serial=${encodeURIComponent(serial)}`;
+    const baseUrl = await getAppBaseUrl(base44.asServiceRole);
+    const claimUrl = `${baseUrl}/claim?serial=${encodeURIComponent(serial)}`;
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; color: #1f2937;">
         <h2 style="margin: 0 0 8px;">QR code for serial ${serial}</h2>

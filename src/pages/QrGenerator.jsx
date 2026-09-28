@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QRCode from "qrcode";
 import { base44 } from "@/api/base44Client";
@@ -25,6 +25,21 @@ export default function QrGenerator() {
   const [svg, setSvg] = useState("");
   const [pngUrl, setPngUrl] = useState("");
   const [emailing, setEmailing] = useState(false);
+  const [baseUrl, setBaseUrl] = useState(window.location.origin);
+
+  // Claim links point at the app's saved address, so QR codes stay valid after
+  // the app moves to a different domain.
+  useEffect(() => {
+    (async () => {
+      try {
+        const rows = await base44.entities.AppSetting.list();
+        const configured = rows?.[0]?.app_base_url;
+        if (configured) setBaseUrl(String(configured).replace(/\/+$/, ""));
+      } catch {
+        // Nothing saved or not readable — keep the address in use right now.
+      }
+    })();
+  }, []);
 
   const goBack = () => {
     if (window.history.state?.idx > 0) navigate(-1);
@@ -42,7 +57,7 @@ export default function QrGenerator() {
     );
   }
 
-  const claimUrl = (s) => `${window.location.origin}/claim?serial=${encodeURIComponent(s)}`;
+  const claimUrl = (s) => `${baseUrl}/claim?serial=${encodeURIComponent(s)}`;
 
   const handleGenerate = async (e) => {
     e.preventDefault();
