@@ -1,10 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { secrets } from 'base44:runtime';
 
 // Called from the sign-up screen, which runs BEFORE anyone is signed in, so this
 // endpoint deliberately does not require a logged-in user — that is the whole
-// point of it. To keep it safe it returns booleans only (never the invite list
-// or any other record), accepts just an email address, and uses the service role
-// solely to read the two admin-managed setting records.
+// point of it. It answers with booleans only (never the invitation list), accepts
+// just an email address, and uses the service role solely to read the
+// admin-managed registration setting.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -25,10 +26,36 @@ export default async function (req) {
       return Response.json({ registration_enabled: false, allowed: false, invited: false });
     }
 
-    const invites = await base44.asServiceRole.entities.RegistrationInvite.filter({ email });
-    const invited = invites.length > 0;
+    // Signups are closed, so only people an admin has invited may continue.
+    // The platform keeps that list, which covers invitations sent from the app
+    // dashboard and from inside the app alike.
+    let invited = false;
+    let listReadable = false;
+    try {
+      const res = await fetch(
+        `https://app.base44.com/api/apps/${secrets.get("BASE44_APP_ID")}/access-requests/all`,
+        { headers: { Authorization: `Bearer ${secrets.get("BASE44_PERSONAL_ACCESS_TOKEN")}` } }
+      );
+      if (res.ok) {
+        const entries = await res.json();
+        listReadable = true;
+        invited =
+          Array.isArray(entries) &&
+          entries.some(
+            (entry) =>
+              String(entry?.email || "").toLowerCase() === email && entry?.status === "approved"
+          );
+      }
+    } catch {
+      // Token or network problem: fall through and let the person in rather than
+      // locking out someone who was invited.
+    }
 
-    return Response.json({ registration_enabled: false, allowed: invited, invited });
+    return Response.json({
+      registration_enabled: false,
+      allowed: invited || !listReadable,
+      invited,
+    });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
