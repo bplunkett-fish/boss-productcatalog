@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { safeFetch } from '../../shared/safeFetch.ts';
 
 // Fetches a file from an external URL and re-uploads it into the app's public
 // storage, returning the internal file_url (plus a derived file_type). Used by
@@ -49,87 +50,6 @@ function deriveExt(type, url) {
   return ext || 'bin';
 }
 
-// SSRF protection: reject loopback, private, link-local, and non-public IPs.
-// IPv4 blocked ranges: 0.0.0.0/8, 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16,
-// 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4+ (multicast/reserved).
-// IPv6 blocked: ::/0 unspecified, ::1 loopback, fe80::/10 link-local,
-// fc00::/7 unique-local, ff00::/8 multicast, and IPv4-mapped addresses.
-const BLOCKED_HOSTNAMES = /^(localhost|ip6-localhost|ip6-loopback|.*\.local)$/i;
-
-function isBlockedIp(ip) {
-  const v4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (v4) {
-    const a = parseInt(v4[1], 10);
-    const b = parseInt(v4[2], 10);
-    if (a === 0 || a === 10 || a === 127) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a >= 224) return true;
-    return false;
-  }
-  const v6 = ip.toLowerCase();
-  if (v6 === '::1' || v6 === '::') return true;
-  if (v6.startsWith('fe80') || v6.startsWith('fc') || v6.startsWith('fd') || v6.startsWith('ff')) return true;
-  if (v6.includes(':ffff:')) {
-    const mapped = v6.split(':').pop();
-    if (mapped && isBlockedIp(mapped)) return true;
-  }
-  return false;
-}
-
-async function assertPublicUrl(rawUrl) {
-  const u = new URL(rawUrl);
-  const host = u.hostname.replace(/^\[|\]$/g, '');
-  if (BLOCKED_HOSTNAMES.test(host)) throw new Error('blocked hostname');
-  // IP literal — check directly.
-  if (/^[\d.]+$/.test(host) || host.includes(':')) {
-    if (isBlockedIp(host)) throw new Error('blocked IP address');
-    return;
-  }
-  // Hostname — resolve and reject if any address is non-public.
-  let addrs;
-  try {
-    addrs = (typeof Deno !== 'undefined' && Deno.resolveDns)
-      ? await Deno.resolveDns(host, 'A')
-      : [];
-  } catch { throw new Error('dns resolution failed'); }
-  if (!addrs || addrs.length === 0) throw new Error('unresolved hostname');
-  for (const a of addrs) {
-    if (isBlockedIp(a)) throw new Error('hostname resolves to a non-public IP');
-  }
-}
-
-// Fetch with manual redirect following so every hop is SSRF-validated.
-async function safeFetch(rawUrl, maxRedirects = 5) {
-  let current = rawUrl;
-  for (let i = 0; i <= maxRedirects; i++) {
-    await assertPublicUrl(current);
-    const res = await fetch(current, {
-      redirect: 'manual',
-      headers: {
-        // Some hosts (e.g. WordPress security plugins) serve an HTML page to
-        // non-browser clients; send a full browser-like header set so direct
-        // file links return the actual file.
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/msword,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-      },
-    });
-    if (res.status >= 300 && res.status < 400) {
-      const loc = res.headers.get('location');
-      if (!loc) return res;
-      current = new URL(loc, current).toString();
-      continue;
-    }
-    return res;
-  }
-  throw new Error('too many redirects');
-}
-
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -143,7 +63,16 @@ export default async function(req) {
     if (!/^https?:\/\//i.test(url)) return Response.json({ error: 'url must start with http(s)://' }, { status: 400 });
     if (isInternalUrl(url)) return Response.json({ error: 'url is already stored internally' }, { status: 400 });
 
-    const res = await safeFetch(url);
+    // SSRF-hardened fetch (see base44/shared/safeFetch.ts) with the document-
+    // friendly headers this importer needs.
+    const res = await safeFetch(url, {
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/msword,*/*;q=0.8',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+      },
+    });
     if (!res.ok) return Response.json({ error: `fetch failed: ${res.status}` }, { status: 502 });
     const blob = await res.blob();
     const type = blob.type || 'application/octet-stream';

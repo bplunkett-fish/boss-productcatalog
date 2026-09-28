@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { safeFetch } from '../../shared/safeFetch.ts';
 
 // Imports model-level records into the Product Database from an uploaded CSV or
 // Excel file. Upserts by model_number — existing models are updated (scalar
@@ -11,7 +12,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 // returning the internal file_url. Throws on failure so the caller can fall
 // back to the original external URL.
 async function importExternalImage(base44, url) {
-  const res = await safeFetch(url);
+  const res = await safeFetch(url, {
+    headers: { 'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8' },
+  });
   if (!res.ok) throw new Error(`image fetch failed: ${res.status}`);
   const blob = await res.blob();
   const type = blob.type || '';
@@ -28,73 +31,6 @@ async function importExternalImage(base44, url) {
 }
 
 const isInternalUrl = (u) => /base44\.com|wixstatic\.com/i.test(u);
-
-// SSRF protection: reject loopback, private, link-local, and non-public IPs.
-const BLOCKED_HOSTNAMES = /^(localhost|ip6-localhost|ip6-loopback|.*\.local)$/i;
-
-function isBlockedIp(ip) {
-  const v4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (v4) {
-    const a = parseInt(v4[1], 10);
-    const b = parseInt(v4[2], 10);
-    if (a === 0 || a === 10 || a === 127) return true;
-    if (a === 169 && b === 254) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a >= 224) return true;
-    return false;
-  }
-  const v6 = ip.toLowerCase();
-  if (v6 === '::1' || v6 === '::') return true;
-  if (v6.startsWith('fe80') || v6.startsWith('fc') || v6.startsWith('fd') || v6.startsWith('ff')) return true;
-  if (v6.includes(':ffff:')) {
-    const mapped = v6.split(':').pop();
-    if (mapped && isBlockedIp(mapped)) return true;
-  }
-  return false;
-}
-
-async function assertPublicUrl(rawUrl) {
-  const u = new URL(rawUrl);
-  const host = u.hostname.replace(/^\[|\]$/g, '');
-  if (BLOCKED_HOSTNAMES.test(host)) throw new Error('blocked hostname');
-  if (/^[\d.]+$/.test(host) || host.includes(':')) {
-    if (isBlockedIp(host)) throw new Error('blocked IP address');
-    return;
-  }
-  let addrs;
-  try {
-    addrs = (typeof Deno !== 'undefined' && Deno.resolveDns)
-      ? await Deno.resolveDns(host, 'A')
-      : [];
-  } catch { throw new Error('dns resolution failed'); }
-  if (!addrs || addrs.length === 0) throw new Error('unresolved hostname');
-  for (const a of addrs) {
-    if (isBlockedIp(a)) throw new Error('hostname resolves to a non-public IP');
-  }
-}
-
-async function safeFetch(rawUrl, maxRedirects = 5) {
-  let current = rawUrl;
-  for (let i = 0; i <= maxRedirects; i++) {
-    await assertPublicUrl(current);
-    const res = await fetch(current, {
-      redirect: 'manual',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
-        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'
-      }
-    });
-    if (res.status >= 300 && res.status < 400) {
-      const loc = res.headers.get('location');
-      if (!loc) return res;
-      current = new URL(loc, current).toString();
-      continue;
-    }
-    return res;
-  }
-  throw new Error('too many redirects');
-}
 
 export default async function(req) {
   try {

@@ -37,6 +37,32 @@ export default async function(req) {
       model_number: modelNumber
     });
 
+    // Entities have no unique constraint, so the check above and this create
+    // are not atomic — two concurrent requests for the same serial can both
+    // pass the check and both create. Reconcile immediately after creating so
+    // the first-owner-locks-it rule always ends up holding: the oldest claim
+    // wins and every other request removes its own duplicate and reports the
+    // serial as already claimed. The short pause lets a concurrent create land
+    // so both contenders agree on the same winner.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const claims = await base44.asServiceRole.entities.CatalogItem.filter({ serial_number: serial });
+    const winner = claims.slice().sort((a, b) => {
+      if (a.created_date !== b.created_date) return a.created_date < b.created_date ? -1 : 1;
+      return a.id < b.id ? -1 : 1;
+    })[0];
+
+    if (winner && winner.id !== created.id) {
+      // Another request claimed the serial first — undo our duplicate.
+      await base44.entities.CatalogItem.delete(created.id);
+      if (winner.created_by_id === user.id) {
+        return Response.json({ status: 'already_in_catalog', id: winner.id });
+      }
+      return Response.json({
+        status: 'already_claimed',
+        message: `Serial ${serial} has already been added to another owner's catalog and is locked.`
+      });
+    }
+
     return Response.json({ status: 'created', id: created.id });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
