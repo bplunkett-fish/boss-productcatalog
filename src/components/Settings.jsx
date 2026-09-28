@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut, Bell, Users as UsersIcon } from "lucide-react";
+import RegistrationToggle from "@/components/RegistrationToggle";
 import ChangePassword from "@/components/ChangePassword";
 import ProfileEditor from "@/components/ProfileEditor";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notificationCategories";
@@ -169,6 +170,10 @@ export default function Settings() {
                 <UsersIcon className="w-4 h-4 mr-2" /> Manage users
               </Link>
             </Button>
+
+            <div className="mt-5">
+              <RegistrationToggle />
+            </div>
           </section>
         )}
 

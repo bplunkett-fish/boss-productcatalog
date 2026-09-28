@@ -1,0 +1,34 @@
+{
+  "name": "AppSetting",
+  "type": "object",
+  "properties": {
+    "registration_enabled": {
+      "type": "boolean",
+      "title": "Allow New Registrations",
+      "description": "When false, the sign-up screen only admits email addresses an admin has invited. A missing record means registration is open.",
+      "default": true
+    }
+  },
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

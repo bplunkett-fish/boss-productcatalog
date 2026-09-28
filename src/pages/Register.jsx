@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Lock, Loader2, Info } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -19,6 +19,22 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  // null = not known yet. Admins can close self-registration, in which case only
+  // email addresses an admin has invited may create an account.
+  const [registrationOpen, setRegistrationOpen] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    base44.functions
+      .invoke("checkSignupEligibility", {})
+      .then((res) => {
+        if (active) setRegistrationOpen(res?.data?.registration_enabled !== false);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +45,17 @@ export default function Register() {
     }
     setLoading(true);
     try {
+      // Closed registration: only an invited address may continue.
+      if (registrationOpen === false) {
+        const res = await base44.functions.invoke("checkSignupEligibility", { email });
+        if (!res?.data?.allowed) {
+          setError(
+            "New signups are currently closed. Ask an administrator to invite you, then try again."
+          );
+          setLoading(false);
+          return;
+        }
+      }
       await base44.auth.register({ email, password });
       setShowOtp(true);
     } catch (err) {
@@ -142,23 +169,38 @@ export default function Register() {
         </>
       }
     >
-      <Button
-        variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
-        onClick={handleGoogle}
-      >
-        <GoogleIcon className="w-5 h-5 mr-2" />
-        Continue with Google
-      </Button>
+      {registrationOpen === false ? (
+        <div className="mb-6 flex gap-3 p-4 rounded-lg bg-muted text-sm">
+          <Info className="w-5 h-5 shrink-0 text-foreground" />
+          <div>
+            <p className="font-medium text-foreground mb-1">New signups are closed</p>
+            <p className="text-muted-foreground">
+              An administrator has turned off self-registration. If you have been invited, use the email
+              address the invitation was sent to. Otherwise, ask an administrator for an invitation.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Button
+            variant="outline"
+            className="w-full h-12 text-sm font-medium mb-6"
+            onClick={handleGoogle}
+          >
+            <GoogleIcon className="w-5 h-5 mr-2" />
+            Continue with Google
+          </Button>
 
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
-        </div>
-      </div>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-3 text-muted-foreground">or</span>
+            </div>
+          </div>
+        </>
+      )}
 
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">

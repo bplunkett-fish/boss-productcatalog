@@ -27,9 +27,23 @@ export default function InviteUserCard({ onInvited }) {
     setSending(true);
     try {
       await base44.users.inviteUser(value, role);
+      // Record the invitation so this address can still sign up if an admin has
+      // turned self-registration off.
+      let exemptionSaved = true;
+      try {
+        await base44.entities.RegistrationInvite.create({
+          email: value.toLowerCase(),
+          role,
+          invited_date: new Date().toISOString(),
+        });
+      } catch {
+        exemptionSaved = false;
+      }
       toast({
         title: "Invitation sent",
-        description: `${value} was invited as ${role === "admin" ? "an admin" : "a user"}.`,
+        description: exemptionSaved
+          ? `${value} was invited as ${role === "admin" ? "an admin" : "a user"}.`
+          : `${value} was invited, but the signup exemption could not be saved.`,
       });
       setEmail("");
       setRole("user");

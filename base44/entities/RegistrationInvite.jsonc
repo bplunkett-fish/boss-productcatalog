@@ -1,0 +1,50 @@
+{
+  "name": "RegistrationInvite",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "title": "Invited Email",
+      "description": "Lower-case address an admin invited. Kept so invited people can still sign up while self-registration is turned off."
+    },
+    "role": {
+      "type": "string",
+      "title": "Role",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "invited_date": {
+      "type": "string",
+      "title": "Invited At",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "email"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
