@@ -29,6 +29,7 @@ const Inbox = lazy(() => import('@/pages/Inbox'));
 const Settings = lazy(() => import('@/components/Settings'));
 const Claim = lazy(() => import('@/pages/Claim'));
 const QrGenerator = lazy(() => import('@/pages/QrGenerator'));
+const UserManagement = lazy(() => import('@/pages/UserManagement'));
 
 function Spinner() {
   return (
@@ -86,6 +87,7 @@ function AnimatedRoutes() {
             <Route path="/product/:id" element={<Suspense fallback={<Spinner />}><Page><ProductDetail /></Page></Suspense>} />
             <Route path="/product-database" element={<Suspense fallback={<Spinner />}><Page><ProductDatabase /></Page></Suspense>} />
             <Route path="/qr-generator" element={<Suspense fallback={<Spinner />}><Page><QrGenerator /></Page></Suspense>} />
+            <Route path="/users" element={<Suspense fallback={<Spinner />}><Page><UserManagement /></Page></Suspense>} />
             <Route path="/claimed-serials" element={<Suspense fallback={<Spinner />}><Page><ClaimedSerials /></Page></Suspense>} />
             <Route path="/notifications" element={<Suspense fallback={<Spinner />}><Page><Notifications /></Page></Suspense>} />
             <Route path="/inbox" element={<Suspense fallback={<Spinner />}><Page><Inbox /></Page></Suspense>} />

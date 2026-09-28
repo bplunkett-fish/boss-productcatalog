@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut, Bell } from "lucide-react";
+import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut, Bell, Users as UsersIcon } from "lucide-react";
 import ChangePassword from "@/components/ChangePassword";
 import ProfileEditor from "@/components/ProfileEditor";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notificationCategories";
@@ -153,6 +153,24 @@ export default function Settings() {
           </div>
           {prefSaving && <p className="text-xs text-muted-foreground mt-2">Saving…</p>}
         </section>
+
+        {/* Team & access (admins) */}
+        {user?.role === "admin" && (
+          <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <UsersIcon className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-lg font-semibold text-foreground">Team &amp; access</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Invite teammates and update their role and contact details without leaving the app.
+            </p>
+            <Button asChild variant="outline" className="min-h-11">
+              <Link to="/users">
+                <UsersIcon className="w-4 h-4 mr-2" /> Manage users
+              </Link>
+            </Button>
+          </section>
+        )}
 
         {/* Change password */}
         <ChangePassword />
