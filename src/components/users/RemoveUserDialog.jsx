@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
+import { userDisplayName } from "@/lib/userName";
 
 // Confirms permanently removing someone from the team. Removal is not
 // recoverable in-app, so it always goes through this dialog.
@@ -19,10 +20,7 @@ export default function RemoveUserDialog({ member, onOpenChange, onConfirm }) {
 
   if (!member) return null;
 
-  const name =
-    [member.first_name, member.last_name].filter(Boolean).join(" ").trim() ||
-    member.full_name ||
-    member.email;
+  const name = userDisplayName(member);
 
   const confirm = async (e) => {
     // Keep the dialog open (and showing progress) until the request finishes.

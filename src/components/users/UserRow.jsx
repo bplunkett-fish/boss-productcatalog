@@ -2,15 +2,13 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Pencil, Power, PowerOff, Trash2, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { userDisplayName } from "@/lib/userName";
 
 // One person in the team list: identity, role, status, and their row actions
 // (edit, deactivate/reactivate, remove). Your own row cannot be deactivated
 // or removed, so an admin can never lock themselves out.
 export default function UserRow({ member, onEdit, onToggleActive, onRequestRemove, isSelf, busy }) {
-  const name =
-    [member.first_name, member.last_name].filter(Boolean).join(" ").trim() ||
-    member.full_name ||
-    member.email;
+  const name = userDisplayName(member);
   const isAdmin = member.role === "admin";
   const isActive = member.is_active !== false;
 

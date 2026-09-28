@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ArrowLeft, Hash, Search, Trash2, ShieldAlert, UserCircle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { userDisplayName } from "@/lib/userName";
 import PullToRefresh from "@/components/PullToRefresh";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -67,14 +68,14 @@ export default function ClaimedSerials() {
   const filtered = (rows || []).filter((r) => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
-    return [r.serial_number, r.model_number, r.owner?.full_name, r.owner?.email]
+    return [r.serial_number, r.model_number, userDisplayName(r.owner), r.owner?.email]
       .some((v) => (v || "").toLowerCase().includes(q));
   });
 
   const SORT_KEYS = {
     serial: (r) => (r.serial_number || "").toLowerCase(),
     product: (r) => (r.product?.product_name || r.model_number || "").toLowerCase(),
-    owner: (r) => (r.owner?.full_name || r.owner?.email || "").toLowerCase(),
+    owner: (r) => userDisplayName(r.owner).toLowerCase(),
     lastService: (r) => r.last_maintenance_date || "",
     due: (r) => r.maintenance_due_date || ""
   };
@@ -187,7 +188,7 @@ export default function ClaimedSerials() {
                         <div className="flex items-center gap-2 min-w-0">
                           <UserCircle className="w-4 h-4 text-muted-foreground shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-sm text-foreground truncate">{r.owner?.full_name || "Unknown user"}</p>
+                            <p className="text-sm text-foreground truncate">{userDisplayName(r.owner) || "Unknown user"}</p>
                             <p className="text-xs text-muted-foreground truncate">{r.owner?.email || ""}</p>
                           </div>
                         </div>
@@ -219,7 +220,7 @@ export default function ClaimedSerials() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove this serial?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes <span className="font-mono font-medium text-foreground">{pending?.serial_number}</span> from {pending?.owner?.full_name || pending?.owner?.email || "this user"}&rsquo;s catalog. The serial number will be freed and available for anyone to claim again.
+              This removes <span className="font-mono font-medium text-foreground">{pending?.serial_number}</span> from {userDisplayName(pending?.owner) || "this user"}&rsquo;s catalog. The serial number will be freed and available for anyone to claim again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
