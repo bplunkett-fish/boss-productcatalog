@@ -18,6 +18,7 @@ import {
 import { Loader2, ArrowLeft, Sun, Moon, Monitor, Trash2, UserCircle, LogOut, Bell, Users as UsersIcon } from "lucide-react";
 import RegistrationToggle from "@/components/RegistrationToggle";
 import AppBaseUrlSetting from "@/components/AppBaseUrlSetting";
+import PushTestCard from "@/components/PushTestCard";
 import ChangePassword from "@/components/ChangePassword";
 import ProfileEditor from "@/components/ProfileEditor";
 import { NOTIFICATION_CATEGORIES } from "@/lib/notificationCategories";
@@ -177,6 +178,7 @@ export default function Settings() {
             <div className="mt-5 space-y-5">
               <RegistrationToggle />
               <AppBaseUrlSetting />
+              <PushTestCard />
             </div>
           </section>
         )}
