@@ -3,9 +3,10 @@ import { secrets } from 'base44:runtime';
 
 // Called from the sign-up screen, which runs BEFORE anyone is signed in, so this
 // endpoint deliberately does not require a logged-in user — that is the whole
-// point of it. It answers with booleans only (never the invitation list), accepts
-// just an email address, and uses the service role solely to read the
-// admin-managed registration setting.
+// point of it. It takes just an email address and answers with one yes/no about
+// that address alone: invitation details are never disclosed and the invitation
+// list is read server-side, never returned. The service role is used solely to
+// read the admin-managed registration setting.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -19,11 +20,11 @@ export default async function (req) {
       settings.length === 0 ? true : settings[0].registration_enabled !== false;
 
     if (registrationEnabled) {
-      return Response.json({ registration_enabled: true, allowed: true, invited: false });
+      return Response.json({ registration_enabled: true, allowed: true });
     }
 
     if (!email) {
-      return Response.json({ registration_enabled: false, allowed: false, invited: false });
+      return Response.json({ registration_enabled: false, allowed: false });
     }
 
     // Signups are closed, so only people an admin has invited may continue.
@@ -54,7 +55,6 @@ export default async function (req) {
     return Response.json({
       registration_enabled: false,
       allowed: invited || !listReadable,
-      invited,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
