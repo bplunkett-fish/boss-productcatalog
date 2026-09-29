@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,11 @@ import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { checkUserAuth } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,7 +27,12 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = returnTo;
+      // Resolve the session in place and route into the app rather than reloading the
+      // page. A full reload makes the session depend on the browser storing the token
+      // across a navigation — on a device webview where that does not survive, the
+      // user lands straight back on this screen despite a successful sign-in.
+      await checkUserAuth();
+      navigate(returnTo, { replace: true });
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
