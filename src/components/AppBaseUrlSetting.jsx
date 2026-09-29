@@ -80,6 +80,10 @@ export default function AppBaseUrlSetting() {
           </Button>
         </div>
       )}
+      <p className="text-xs text-muted-foreground mt-2">
+        Changing this address requires rebuilding the mobile app before phone notifications open it — publish
+        your changes, then generate new app store files under Publish → Mobile app.
+      </p>
       {error && <p className="text-sm text-destructive mt-2">{error}</p>}
     </div>
   );
