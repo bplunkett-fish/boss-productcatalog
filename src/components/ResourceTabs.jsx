@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, ExternalLink, Download, ChevronDown, BookOpen } from "lucide-react";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import { openInDefaultBrowser } from "@/lib/externalLinks";
 
 const TABS = [
   { key: "manuals", label: "Manuals", icon: FileText },
@@ -199,6 +200,7 @@ function PartsList({ items }) {
           href={p.url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => { if (openInDefaultBrowser(p.url)) e.preventDefault(); }}
           className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-foreground/20 hover:bg-muted transition-colors group"
         >
           <div className="w-11 h-11 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
