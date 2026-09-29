@@ -9,32 +9,9 @@ import { secrets } from 'base44:runtime';
 // read the admin-managed registration setting.
 //
 // The invitation answer FAILS CLOSED: if the list cannot be read (missing or
-// expired token, network failure) nobody is admitted and the caller is told the
-// check could not be completed. Repeated probing from one caller is throttled so
-// the yes/no cannot be used to enumerate invited addresses at scale.
-
-const PROBE_MAX = 8;            // email checks allowed per caller ...
-const PROBE_WINDOW_MS = 60000;  // ... per minute
-
-// Best-effort, per-instance counters — enough to blunt scripted enumeration.
-const probes = new Map();
-
-function underProbeLimit(caller) {
-  const now = Date.now();
-  if (probes.size > 2000) {
-    for (const [key, entry] of probes) {
-      if (now - entry.start > PROBE_WINDOW_MS) probes.delete(key);
-    }
-  }
-  const entry = probes.get(caller);
-  if (!entry || now - entry.start > PROBE_WINDOW_MS) {
-    probes.set(caller, { count: 1, start: now });
-    return true;
-  }
-  entry.count += 1;
-  return entry.count <= PROBE_MAX;
-}
-
+// expired token, network failure) nobody is admitted, and `verified: false` tells
+// the sign-up screen to say the check is unavailable rather than implying the
+// address was not invited.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -53,16 +30,6 @@ export default async function (req) {
 
     if (!email) {
       return Response.json({ registration_enabled: false, allowed: false, verified: true });
-    }
-
-    // Throttle the address checks, which are the only part of this response that
-    // says anything about someone else's account.
-    const caller =
-      req.headers.get("cf-connecting-ip") ||
-      (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
-      "unknown";
-    if (!underProbeLimit(caller)) {
-      return Response.json({ registration_enabled: false, allowed: false, verified: false });
     }
 
     // Signups are closed, so only people an admin has invited may continue.
@@ -87,8 +54,7 @@ export default async function (req) {
       }
     } catch {
       // Token or network problem: the check could not be completed, so nobody is
-      // admitted. `verified: false` lets the sign-up screen say the check is
-      // temporarily unavailable instead of implying the address was not invited.
+      // admitted — never let an unreadable list stand in for an approved invite.
     }
 
     return Response.json({
