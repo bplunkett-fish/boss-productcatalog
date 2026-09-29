@@ -42,8 +42,9 @@ export default async function(req) {
         if (!isOptedIn(u, n.category)) continue;
         if (alreadyNotified.has(u.id)) continue;
 
+        let alertId = null;
         try {
-          await svc.entities.AppNotification.create({
+          const alert = await svc.entities.AppNotification.create({
             user_id: u.id,
             title: n.title,
             content: n.content,
@@ -52,6 +53,7 @@ export default async function(req) {
             read: false,
             action_url: APP_URL
           });
+          alertId = alert?.id || null;
           delivered++;
         } catch (e) {
           continue; // don't push if the in-app alert didn't persist
@@ -63,7 +65,9 @@ export default async function(req) {
             title: n.title,
             content: n.content,
             action_label: "Open app",
-            action_url: APP_URL
+            // Tapping the push carries the alert's id back into the app, where
+            // the client marks that inbox message read (NotificationDeepLink).
+            action_url: alertId ? `${APP_URL}?mark_read=${alertId}` : APP_URL
           });
         } catch (e) {
           // Push may fail if no native mobile build / push credentials are

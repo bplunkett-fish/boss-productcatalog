@@ -15,6 +15,7 @@ import { Navigate } from 'react-router-dom';
 import TabBar, { DesktopNav } from '@/components/TabBar';
 import TimezoneSync from '@/components/TimezoneSync';
 import AccountStatusGate from '@/components/AccountStatusGate';
+import NotificationDeepLink from '@/components/NotificationDeepLink';
 
 // Lazy-loaded routes (code-splitting for performance).
 const Home = lazy(() => import('@/pages/Home'));
@@ -65,6 +66,7 @@ function AppLayout() {
   return (
     <AccountStatusGate>
       <TimezoneSync />
+      <NotificationDeepLink />
       <DesktopNav />
       <Outlet />
       <TabBar />

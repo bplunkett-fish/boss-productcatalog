@@ -83,12 +83,15 @@ export default async function(req) {
 
       // In-app alert: keep one unread per item, but always surface an upgrade
       // to "critical" even if a lower-priority unread one is still present.
+      // The unread alert this push stands for, so tapping the push can mark it
+      // read. Null when the owner already read everything for this item.
+      let alertId = null;
       try {
         const existing = await svc.entities.AppNotification.filter({ ref_id: item.id, read: false }, "-created_date", 50);
         const hasCritical = (existing || []).some((n) => n.priority === "critical");
         const needsCreate = !existing || existing.length === 0 || (priority === "critical" && !hasCritical);
         if (needsCreate) {
-          await svc.entities.AppNotification.create({
+          const alert = await svc.entities.AppNotification.create({
             user_id: item.created_by_id,
             title,
             content,
@@ -98,6 +101,9 @@ export default async function(req) {
             read: false,
             action_url: actionUrl
           });
+          alertId = alert?.id || null;
+        } else {
+          alertId = existing?.[0]?.id || null;
         }
       } catch (e) { /* ignore in-app create failures */ }
 
@@ -111,7 +117,9 @@ export default async function(req) {
           title,
           content,
           action_label: "View details",
-          action_url: actionUrl
+          // Tapping the push carries the alert's id back into the app, where the
+          // client marks that inbox message read (NotificationDeepLink).
+          action_url: alertId ? `${actionUrl}?mark_read=${alertId}` : actionUrl
         });
         await svc.entities.CatalogItem.update(item.id, { last_reminder_sent_at: new Date().toISOString() });
         sent++;
