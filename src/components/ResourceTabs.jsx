@@ -10,7 +10,7 @@ const TABS = [
   { key: "videos", label: "Videos", icon: Video },
   { key: "faqs", label: "FAQs", icon: HelpCircle },
   { key: "troubleshooting", label: "Troubleshooting", icon: Wrench },
-  { key: "parts_links", label: "Parts Store", icon: ShoppingCart },
+  { key: "parts_links", label: "Common Wear Parts", icon: ShoppingCart },
 ];
 
 export default function ResourceTabs({ product }) {

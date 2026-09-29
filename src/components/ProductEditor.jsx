@@ -51,7 +51,7 @@ const RESOURCE_LABELS = {
   videos: "Videos",
   faqs: "FAQs",
   troubleshooting: "Troubleshooting",
-  parts_links: "Parts Store Links",
+  parts_links: "Common Wear Parts",
   literature: "Product Literature"
 };
 
