@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, UploadCloud, Loader2 } from "lucide-react";
+import { findStoredDuplicate } from "@/lib/fileDuplicates";
+import { useToast } from "@/components/ui/use-toast";
 
 // Generic editor for an array of plain objects. `fields` describes the keys of
 // each row: [{ key, label, type?, upload? }]. type "number" parses numeric
@@ -14,6 +16,7 @@ const isFetchableUrl = (u) => /^https?:\/\//i.test(u) && !isInternalUrl(u);
 
 export default function ResourceListEditor({ items = [], fields, onChange }) {
   const fileInputRef = useRef(null);
+  const { toast } = useToast();
   const dirtyRef = useRef(new Set());
   const [active, setActive] = useState(null); // { idx, fieldKey, kind }
 
@@ -45,12 +48,22 @@ export default function ResourceListEditor({ items = [], fields, onChange }) {
     e.target.value = "";
     if (!file || !active) return;
     try {
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      // Reuse a document already stored for any product rather than uploading a
+      // second copy of the same file (same file name AND identical contents).
+      const storedUrl = await findStoredDuplicate(file, items.map(it => it?.[active.fieldKey]));
+      let file_url = storedUrl;
+      if (!file_url) {
+        const uploaded = await base44.integrations.Core.UploadPublicFile({ file });
+        file_url = uploaded.file_url;
+      }
       const patch = { [active.fieldKey]: file_url };
       if (fields.some(f => f.key === "file_type")) {
         patch.file_type = file.name.split(".").pop().toLowerCase();
       }
       updateMany(active.idx, patch);
+      if (storedUrl) {
+        toast({ description: `“${file.name}” is already stored — linked the existing copy instead of uploading it again.` });
+      }
     } catch (err) {
       alert(err.message || "Upload failed");
     } finally {
