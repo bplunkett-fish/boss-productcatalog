@@ -50,7 +50,9 @@ export default function Register() {
         const res = await base44.functions.invoke("checkSignupEligibility", { email });
         if (!res?.data?.allowed) {
           setError(
-            "New signups are currently closed. Ask an administrator to invite you, then try again."
+            res?.data?.verified === false
+              ? "We couldn't check that address right now. Please try again in a few minutes, or ask an administrator to invite you."
+              : "New signups are currently closed. Ask an administrator to invite you, then try again."
           );
           setLoading(false);
           return;
