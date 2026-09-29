@@ -36,7 +36,7 @@ const RESOURCE_FIELDS = {
   parts_links: [
     { key: "part_number", label: "Part #" },
     { key: "name", label: "Name" },
-    { key: "url", label: "URL", upload: true },
+    { key: "url", label: "URL" },
     { key: "price", label: "Price", type: "number" }
   ],
   literature: [
