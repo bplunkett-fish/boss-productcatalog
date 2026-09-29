@@ -210,9 +210,6 @@ function PartsList({ items }) {
             <p className="font-medium text-foreground truncate">{p.name}</p>
             <p className="text-xs text-muted-foreground mt-0.5 font-mono">Part #{p.part_number}</p>
           </div>
-          {typeof p.price === "number" && (
-            <span className="font-semibold text-foreground shrink-0">${p.price.toFixed(2)}</span>
-          )}
           <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
         </a>
       ))}
