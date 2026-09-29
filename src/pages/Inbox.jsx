@@ -61,8 +61,16 @@ export default function Inbox() {
     if (!n.action_url) return;
     try {
       const url = new URL(n.action_url);
-      if (url.origin === window.location.origin) navigate(url.pathname + url.search);
-      else window.open(n.action_url, "_blank");
+      // Alert links always point at app pages, so follow them inside the app even
+      // when the link is built from the app's other address (the web address saved
+      // in Settings vs the one currently open) — otherwise the tap would leave the
+      // app for a browser tab instead of the product.
+      const isAppPage = url.pathname === "/" || url.pathname.startsWith("/product/");
+      if (url.origin === window.location.origin || isAppPage) {
+        navigate(url.pathname + url.search);
+      } else {
+        window.open(n.action_url, "_blank");
+      }
     } catch { /* ignore malformed */ }
   };
 
