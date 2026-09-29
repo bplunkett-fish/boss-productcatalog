@@ -86,6 +86,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
+      return true;
     } catch (error) {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);
@@ -99,6 +100,7 @@ export const AuthProvider = ({ children }) => {
           message: 'Authentication required'
         });
       }
+      return false;
     }
   };
 

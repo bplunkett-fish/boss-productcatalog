@@ -27,17 +27,22 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      // Resolve the session in place and route into the app rather than reloading the
-      // page. A full reload makes the session depend on the browser storing the token
-      // across a navigation — on a device webview where that does not survive, the
-      // user lands straight back on this screen despite a successful sign-in.
-      await checkUserAuth();
-      navigate(returnTo, { replace: true });
     } catch (err) {
       setError(err.message || "Invalid email or password");
-    } finally {
       setLoading(false);
+      return;
     }
+    // Establish the session in place and route straight into the app instead of
+    // reloading the page. A reload makes you depend on the device keeping the token
+    // across a navigation — where that does not survive, you land right back here
+    // with no explanation, which is exactly what looked like a failed login.
+    const signedIn = await checkUserAuth();
+    setLoading(false);
+    if (!signedIn) {
+      setError("Your login worked, but this device didn't keep the session. Please try again.");
+      return;
+    }
+    navigate(returnTo, { replace: true });
   };
 
   const handleGoogle = () => {
