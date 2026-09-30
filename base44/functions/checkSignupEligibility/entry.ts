@@ -46,7 +46,10 @@ export default async function (req) {
     // used as a bulk lookup tool. Only the recent window is counted; the oldest
     // record is dropped once the window is full, which keeps the table bounded.
     const ip =
-      (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+      (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
+      (req.headers.get("x-real-ip") || "").trim() ||
+      (req.headers.get("cf-connecting-ip") || "").trim() ||
+      "unknown";
     const attempts = await base44.asServiceRole.entities.SignupCheckAttempt.filter(
       { ip },
       "-created_date",
