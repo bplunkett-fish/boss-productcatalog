@@ -1,12 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
 
+// Abuse control for the invitation answer (see the note above the handler).
+const CHECK_WINDOW_MS = 10 * 60 * 1000;
+const MAX_CHECKS_PER_IP = 20;
+
 // Called from the sign-up screen, which runs BEFORE anyone is signed in, so this
-// endpoint deliberately does not require a logged-in user — that is the whole
-// point of it. It takes just an email address and answers with one yes/no about
-// that address alone: invitation details are never disclosed and the invitation
-// list is read server-side, never returned. The service role is used solely to
-// read the admin-managed registration setting.
+// endpoint deliberately does NOT require a logged-in user — an auth check would
+// make the sign-up screen unusable. It takes just an email address and answers
+// with one yes/no about that address alone: invitation details are never
+// disclosed and the invitation list is read server-side, never returned. The
+// service role is used solely for the admin-managed registration setting.
+//
+// Because it must stay open, the caller is limited instead of authenticated:
+// answers for a given address are handed out at most MAX_CHECKS_PER_IP times per
+// CHECK_WINDOW_MS from one address, so the list cannot be walked in bulk. Over
+// that limit the answer is "unavailable", which fails closed — an attacker
+// learns nothing, and a real sign-up simply retries later.
 //
 // The invitation answer FAILS CLOSED: if the list cannot be read (missing or
 // expired token, network failure) nobody is admitted, and `verified: false` tells
@@ -30,6 +40,31 @@ export default async function (req) {
 
     if (!email) {
       return Response.json({ registration_enabled: false, allowed: false, verified: true });
+    }
+
+    // Rate limit before the invitation list is consulted, so the check cannot be
+    // used as a bulk lookup tool. Only the recent window is counted; the oldest
+    // record is dropped once the window is full, which keeps the table bounded.
+    const ip =
+      (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+    const attempts = await base44.asServiceRole.entities.SignupCheckAttempt.filter(
+      { ip },
+      "-created_date",
+      MAX_CHECKS_PER_IP
+    );
+    const oldest = attempts[attempts.length - 1];
+    if (
+      attempts.length >= MAX_CHECKS_PER_IP &&
+      oldest &&
+      Date.now() - new Date(oldest.created_date).getTime() < CHECK_WINDOW_MS
+    ) {
+      return Response.json({ registration_enabled: false, allowed: false, verified: false });
+    }
+    await base44.asServiceRole.entities.SignupCheckAttempt.create({ ip });
+    if (attempts.length >= MAX_CHECKS_PER_IP && oldest) {
+      await base44.asServiceRole.entities.SignupCheckAttempt
+        .delete(oldest.id)
+        .catch(() => {});
     }
 
     // Signups are closed, so only people an admin has invited may continue.

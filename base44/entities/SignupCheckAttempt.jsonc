@@ -1,0 +1,36 @@
+{
+  "name": "SignupCheckAttempt",
+  "type": "object",
+  "properties": {
+    "ip": {
+      "type": "string",
+      "title": "Caller Address",
+      "description": "Address the sign-up eligibility check came from, kept only to limit how many invitation answers one caller can request."
+    }
+  },
+  "required": [
+    "ip"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
