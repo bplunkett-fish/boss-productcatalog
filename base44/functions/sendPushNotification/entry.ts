@@ -18,7 +18,7 @@ export default async function(req) {
     const response = await base44.asServiceRole.integrations.Core.SendPushNotification({
       user_id: user.id,
       title: 'Test notification',
-      content: 'Test push from ProductSync Pro. If you can see this, push notifications are reaching your device.',
+      content: 'Test push from MyBOSS Central. If you can see this, push notifications are reaching your device.',
       action_label: 'Open app',
       action_url: actionUrl
     });

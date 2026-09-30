@@ -107,7 +107,7 @@ export default function Settings() {
         {/* Appearance */}
         <section className="rounded-2xl bg-card border border-border p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-foreground mb-1">Appearance</h2>
-          <p className="text-sm text-muted-foreground mb-4">Choose how ProductSync Pro looks.</p>
+          <p className="text-sm text-muted-foreground mb-4">Choose how MyBOSS Central looks.</p>
           <div className="grid grid-cols-3 gap-2">
             {themeOptions.map((opt) => {
               const Icon = opt.icon;
