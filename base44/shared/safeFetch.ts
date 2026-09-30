@@ -70,11 +70,14 @@ export function ipv6Bytes(text) {
 export function isBlockedIp(ip) {
   const v4 = canonicalIpv4(ip);
   if (v4) {
-    const [a, b] = v4.split('.').map((n) => parseInt(n, 10));
+    const [a, b, c] = v4.split('.').map((n) => parseInt(n, 10));
     if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // 100.64/10 carrier-grade NAT
     if (a === 169 && b === 254) return true;
     if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 0 && c === 0) return true; // 192.0.0/24 IETF protocol assignments
     if (a === 192 && b === 168) return true;
+    if (a === 198 && (b === 18 || b === 19)) return true; // 198.18/15 benchmarking
     if (a >= 224) return true;
     return false;
   }

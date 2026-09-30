@@ -61,6 +61,9 @@ export default function Inbox() {
     if (!n.action_url) return;
     try {
       const url = new URL(n.action_url);
+      // Only http(s) targets are ever followed: the field is writable on one's own
+      // notifications, and a javascript:/data: value would run script in this window.
+      if (url.protocol !== "http:" && url.protocol !== "https:") return;
       // Alert links always point at app pages, so follow them inside the app even
       // when the link is built from the app's other address (the web address saved
       // in Settings vs the one currently open) — otherwise the tap would leave the
