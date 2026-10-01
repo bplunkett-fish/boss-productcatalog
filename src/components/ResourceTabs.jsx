@@ -3,14 +3,16 @@ import { FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, ExternalLink,
 import VideoThumbnail from "@/components/VideoThumbnail";
 import { openInDefaultBrowser } from "@/lib/externalLinks";
 
+// Common Wear Parts sits second, right after Manuals, and carries a subtle
+// highlight so the shop-for-parts shortcut reads as the next thing to reach for.
 const TABS = [
   { key: "manuals", label: "Manuals", icon: FileText },
+  { key: "parts_links", label: "Common Wear Parts", icon: ShoppingCart, prominent: true },
   { key: "literature", label: "Literature", icon: BookOpen },
   { key: "wiring_diagrams", label: "Wiring Diagrams", icon: Cable },
   { key: "videos", label: "Videos", icon: Video },
   { key: "faqs", label: "FAQs", icon: HelpCircle },
   { key: "troubleshooting", label: "Troubleshooting", icon: Wrench },
-  { key: "parts_links", label: "Common Wear Parts", icon: ShoppingCart },
 ];
 
 export default function ResourceTabs({ product }) {
@@ -42,10 +44,14 @@ export default function ResourceTabs({ product }) {
               aria-label={tab.label}
               aria-selected={isActive}
               role="tab"
-              className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-t-md ${
+              className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors whitespace-nowrap min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-t-md ${
+                tab.prominent ? "font-semibold" : "font-medium"
+              } ${
                 isActive
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  ? `border-primary text-foreground ${tab.prominent ? "bg-primary/5" : ""}`
+                  : tab.prominent
+                    ? "border-transparent text-foreground bg-primary/5 hover:bg-primary/10"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-4 h-4" />
