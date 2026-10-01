@@ -1,0 +1,36 @@
+{
+  "name": "RlsProbe",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "title": "Label"
+    }
+  },
+  "required": [
+    "label"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "probe-never-matches"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

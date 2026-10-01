@@ -31,16 +31,14 @@ export default function ClaimedSerials() {
 
   const load = useCallback(async () => {
     try {
-      const [items, users, products] = await Promise.all([
-        base44.entities.CatalogItem.list("-created_date", 500),
-        base44.entities.User.list(),
-        base44.entities.Product.list("-updated_date", 500)
-      ]);
+      // Every owner's claims come from an admin-only endpoint, so one admin
+      // sees the same list as another.
+      const { data } = await base44.functions.invoke("listClaimedSerials", {});
       const userMap = {};
-      for (const u of users) userMap[u.id] = u;
+      for (const u of data?.users || []) userMap[u.id] = u;
       const productMap = {};
-      for (const p of products) productMap[p.model_number] = p;
-      setRows(items.map((i) => ({
+      for (const p of data?.products || []) productMap[p.model_number] = p;
+      setRows((data?.items || []).map((i) => ({
         ...i,
         owner: userMap[i.created_by_id] || null,
         product: productMap[i.model_number] || null
