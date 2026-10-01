@@ -7,6 +7,7 @@ import ResourceTabs from "@/components/ResourceTabs";
 import WarrantyRegistrationForm from "@/components/WarrantyRegistrationForm";
 import MaintenanceCard from "@/components/MaintenanceCard";
 import PullToRefresh from "@/components/PullToRefresh";
+import { isMaintenanceDueSoon } from "@/lib/maintenanceStatus";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -68,6 +69,9 @@ export default function ProductDetail() {
   const category = product?.category;
   const manufacturer = product?.manufacturer;
   const description = product?.product_description;
+  // A service due within the week (or already overdue) moves above the reference
+  // material, so the action the user needs to take comes first.
+  const maintenanceDueSoon = isMaintenanceDueSoon(item, product);
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,8 +84,8 @@ export default function ProductDetail() {
       </header>
 
       <PullToRefresh onRefresh={loadDetail}>
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12">
-        <div className="flex flex-col sm:flex-row gap-6 mb-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12 space-y-6">
+        <div className="flex flex-col sm:flex-row gap-6">
           <div className="w-full sm:w-56 h-56 rounded-2xl bg-muted overflow-hidden shrink-0">
             {image ? (
               <img src={image} alt={name} className="w-full h-full object-cover" />
@@ -111,6 +115,8 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        {maintenanceDueSoon && <MaintenanceCard item={item} product={product} onUpdated={loadDetail} />}
+
         <div className="bg-card rounded-2xl border border-border p-5 sm:p-7">
           <h2 className="text-lg font-semibold text-foreground mb-5">Resources</h2>
           {product ? (
@@ -120,9 +126,9 @@ export default function ProductDetail() {
           )}
         </div>
 
-        <MaintenanceCard item={item} product={product} onUpdated={loadDetail} />
+        {!maintenanceDueSoon && <MaintenanceCard item={item} product={product} onUpdated={loadDetail} />}
 
-        <div className="bg-card rounded-2xl border border-border p-5 sm:p-7 mt-6">
+        <div className="bg-card rounded-2xl border border-border p-5 sm:p-7">
           <h2 className="text-lg font-semibold text-foreground mb-1">Lifetime warranty registration</h2>
           <p className="text-sm text-muted-foreground mb-5">Register this unit for its lifetime warranty.</p>
           <WarrantyRegistrationForm item={item} product={product} />

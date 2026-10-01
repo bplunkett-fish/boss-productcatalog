@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Bell, BellOff, Wrench, CalendarClock } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { getMaintenanceStatus } from "@/lib/maintenanceStatus";
 
 const TONE = {
   muted: "bg-muted text-muted-foreground",
@@ -20,17 +21,7 @@ export default function MaintenanceCard({ item, product, onUpdated }) {
 
   const interval = product?.service_interval;
   const due = item.maintenance_due_date;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const dueDate = due ? new Date(due + "T00:00:00") : null;
-  const diffDays = dueDate ? Math.round((dueDate - today) / 86400000) : null;
-
-  let status = null;
-  if (!interval) status = { text: "No service interval set for this model", tone: "muted" };
-  else if (!item.last_maintenance_date) status = { text: "Record your last maintenance to start tracking", tone: "muted" };
-  else if (!due) status = { text: `Interval "${interval}" can't be scheduled automatically`, tone: "muted" };
-  else if (diffDays < 0) status = { text: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? "" : "s"}`, tone: "destructive" };
-  else if (diffDays <= 7) status = { text: `Due in ${diffDays} day${diffDays === 1 ? "" : "s"}`, tone: "warning" };
-  else status = { text: `Due in ${diffDays} days`, tone: "ok" };
+  const status = getMaintenanceStatus(item, product);
 
   const save = async () => {
     if (!date) { toast({ title: "Pick a date first", variant: "destructive" }); return; }
