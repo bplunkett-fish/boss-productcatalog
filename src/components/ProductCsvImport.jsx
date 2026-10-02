@@ -38,7 +38,13 @@ export default function ProductCsvImport() {
             Bulk-load model-level records into the Product Database. Required columns:{" "}
             <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">model_number, product_name</span>
             {" "}— optional:{" "}
-            <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">product_description, category, manufacturer, image_url, serial_number</span>
+            <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">product_description, category, manufacturer, image_url, serial_number, warranty_status</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            A row with a <span className="font-mono">serial_number</span> can also carry that unit's{" "}
+            <span className="font-mono">warranty_status</span> —{" "}
+            <span className="font-medium">Active, Available, Expired,</span> or{" "}
+            <span className="font-medium">Pending Verification</span>. Existing statuses are only changed when the cell has one of those values.
           </p>
         </div>
       </div>
@@ -75,7 +81,7 @@ export default function ProductCsvImport() {
         <div className="mt-4 flex items-start gap-3 p-3 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
           <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="text-sm">
-            Imported {result.total} model{result.total === 1 ? "" : "s"} — {result.created} new, {result.updated} updated{result.serials_created ? `, ${result.serials_created} serial${result.serials_created === 1 ? "" : "s"} mapped` : ""}.
+            Imported {result.total} model{result.total === 1 ? "" : "s"} — {result.created} new, {result.updated} updated{result.serials_created ? `, ${result.serials_created} serial${result.serials_created === 1 ? "" : "s"} mapped` : ""}{result.warranty_statuses_set ? `, ${result.warranty_statuses_set} warranty status${result.warranty_statuses_set === 1 ? "" : "es"} set` : ""}.
           </span>
         </div>
       )}

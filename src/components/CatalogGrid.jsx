@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2, ArrowRight, FileText, Cable, Video, HelpCircle, Wrench, ShoppingCart, AlertTriangle, BellOff, Bell } from "lucide-react";
 import { parseISO, differenceInCalendarDays } from "date-fns";
+import WarrantyBadge from "@/components/WarrantyBadge";
 
 function countBadge(items) {
   return Array.isArray(items) ? items.length : 0;
@@ -96,6 +97,11 @@ export default function CatalogGrid({ items, onDelete, deletingId, onToggleSilen
                 <h3 className="font-semibold text-foreground mt-1 leading-snug hover:underline">{name}</h3>
               </Link>
               <p className="text-xs text-muted-foreground mt-1 font-mono">{item.serial_number}</p>
+              {item.warranty_status && (
+                <div className="self-start mt-2">
+                  <WarrantyBadge status={item.warranty_status} />
+                </div>
+              )}
               {item.maintenance_silenced && (
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md mt-2 self-start">
                   <BellOff className="w-3 h-3" /> Reminders silenced

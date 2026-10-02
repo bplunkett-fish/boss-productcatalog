@@ -8,6 +8,8 @@ import WarrantyRegistrationForm from "@/components/WarrantyRegistrationForm";
 import MaintenanceCard from "@/components/MaintenanceCard";
 import PullToRefresh from "@/components/PullToRefresh";
 import { isMaintenanceDueSoon } from "@/lib/maintenanceStatus";
+import WarrantyBadge from "@/components/WarrantyBadge";
+import { loadWarrantyStatuses } from "@/lib/warrantyStatus";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -20,11 +22,18 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [warrantyStatus, setWarrantyStatus] = useState(null);
 
   const loadDetail = useCallback(async () => {
     try {
       const record = await base44.entities.CatalogItem.get(id);
       setItem(record);
+      if (record?.serial_number) {
+        // Warranty status belongs to the unit, so it is read from the serial
+        // record rather than stored on the catalog item.
+        const statuses = await loadWarrantyStatuses([record]);
+        setWarrantyStatus(statuses[record.serial_number] || null);
+      }
       if (record?.model_number) {
         try {
           const list = await base44.entities.Product.filter({ model_number: record.model_number }, "-updated_date", 1);
@@ -107,6 +116,9 @@ export default function ProductDetail() {
               <DetailField label="Model" value={item.model_number} mono />
               <DetailField label="Category" value={category} />
               <DetailField label="Service interval" value={product?.service_interval} />
+              <DetailField label="Warranty status">
+                {warrantyStatus ? <WarrantyBadge status={warrantyStatus} /> : null}
+              </DetailField>
             </div>
 
             {description && (
@@ -139,11 +151,15 @@ export default function ProductDetail() {
   );
 }
 
-function DetailField({ label, value, mono }) {
+function DetailField({ label, value, mono, children }) {
   return (
     <div>
       <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`text-sm text-foreground mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
+      {children ? (
+        <div className="mt-1">{children}</div>
+      ) : (
+        <p className={`text-sm text-foreground mt-0.5 ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
+      )}
     </div>
   );
 }

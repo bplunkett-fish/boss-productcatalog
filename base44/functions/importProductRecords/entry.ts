@@ -32,6 +32,21 @@ async function importExternalImage(base44, url) {
 
 const isInternalUrl = (u) => /base44\.com|wixstatic\.com/i.test(u);
 
+// Warranty states accepted from the file (and later from the ERP). Anything
+// unrecognized is ignored so a stray value never overwrites a known status.
+const WARRANTY_STATUSES = {
+  'active': 'Active',
+  'available': 'Available',
+  'expired': 'Expired',
+  'pending verification': 'Pending Verification',
+  'pending': 'Pending Verification'
+};
+
+function normalizeWarrantyStatus(value) {
+  const key = String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return WARRANTY_STATUSES[key] || '';
+}
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -56,7 +71,8 @@ export default async function(req) {
             product_description: { type: 'string' },
             category: { type: 'string' },
             manufacturer: { type: 'string' },
-            image_url: { type: 'string' }
+            image_url: { type: 'string' },
+            warranty_status: { type: 'string' }
           },
           required: ['model_number', 'product_name']
         }
@@ -81,7 +97,8 @@ export default async function(req) {
         product_description: String(r.product_description || '').trim(),
         category: String(r.category || '').trim(),
         manufacturer: String(r.manufacturer || '').trim(),
-        image_url: String(r.image_url || '').trim()
+        image_url: String(r.image_url || '').trim(),
+        warranty_status: normalizeWarrantyStatus(r.warranty_status)
       }))
       .filter(r => r.model_number && r.product_name);
 
@@ -157,7 +174,7 @@ export default async function(req) {
     // Serial → model mappings. Until the SAGE ERP integration is live, these
     // records let serial-number lookups resolve to a model (and thus to the
     // Product). Upsert by serial_number so re-imports don't duplicate.
-    let serialsCreated = 0, serialsUpdated = 0;
+    let serialsCreated = 0, serialsUpdated = 0, warrantyStatusesSet = 0;
     const serialRows = cleaned.filter(r => r.serial_number);
     if (serialRows.length) {
       const serials = serialRows.map(r => r.serial_number);
@@ -169,11 +186,23 @@ export default async function(req) {
       for (const r of serialRows) {
         const ex = bySerial[r.serial_number];
         if (ex) {
-          if (ex.model_number !== r.model_number) {
-            recsToUpdate.push({ id: ex.id, serial_number: r.serial_number, model_number: r.model_number });
+          const changes = {};
+          if (ex.model_number !== r.model_number) changes.model_number = r.model_number;
+          // A status in the file wins; a blank cell leaves the stored one alone.
+          if (r.warranty_status && r.warranty_status !== ex.warranty_status) {
+            changes.warranty_status = r.warranty_status;
+          }
+          if (Object.keys(changes).length) {
+            recsToUpdate.push({ id: ex.id, serial_number: r.serial_number, ...changes });
+            if (changes.warranty_status) warrantyStatusesSet += 1;
           }
         } else {
-          recsToCreate.push({ serial_number: r.serial_number, model_number: r.model_number });
+          recsToCreate.push({
+            serial_number: r.serial_number,
+            model_number: r.model_number,
+            ...(r.warranty_status ? { warranty_status: r.warranty_status } : {})
+          });
+          if (r.warranty_status) warrantyStatusesSet += 1;
         }
       }
       if (recsToCreate.length) {
@@ -186,7 +215,7 @@ export default async function(req) {
       }
     }
 
-    return Response.json({ status: 'ok', created, updated, images_imported: imagesImported, serials_created: serialsCreated, serials_updated: serialsUpdated, total: created + updated });
+    return Response.json({ status: 'ok', created, updated, images_imported: imagesImported, serials_created: serialsCreated, serials_updated: serialsUpdated, warranty_statuses_set: warrantyStatusesSet, total: created + updated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

@@ -11,6 +11,7 @@ import PullToRefresh from "@/components/PullToRefresh";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import NotificationBell from "@/components/NotificationBell";
+import { loadWarrantyStatuses } from "@/lib/warrantyStatus";
 
 export default function Home() {
   const { user } = useAuth();
@@ -30,7 +31,14 @@ export default function Home() {
       );
       const productMap = {};
       for (const p of products) productMap[p.model_number] = p;
-      setItems(list.map((i) => ({ ...i, product: productMap[i.model_number] || null })));
+      // Warranty status is tracked per unit (serial number), so it is looked up
+      // from the serial records rather than stored on the catalog item.
+      const warrantyMap = await loadWarrantyStatuses(list);
+      setItems(list.map((i) => ({
+        ...i,
+        product: productMap[i.model_number] || null,
+        warranty_status: warrantyMap[i.serial_number] || null
+      })));
     } catch (err) {
       setItems([]);
     } finally {

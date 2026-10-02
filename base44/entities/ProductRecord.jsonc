@@ -9,6 +9,17 @@
     "model_number": {
       "type": "string",
       "title": "Model Number"
+    },
+    "warranty_status": {
+      "type": "string",
+      "title": "Warranty Status",
+      "description": "Warranty state of this specific unit. Set from the CSV import today; refreshed from the ERP once that feed is live.",
+      "enum": [
+        "Active",
+        "Available",
+        "Expired",
+        "Pending Verification"
+      ]
     }
   },
   "required": [
