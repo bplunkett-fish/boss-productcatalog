@@ -71,12 +71,12 @@ export default function Home() {
   const handleToggleSilence = async (item) => {
     const next = !item.maintenance_silenced;
     setSilencingId(item.id);
-    setItems((prev) => (prev || []).map((i) => (i.id === item.id ? { ...i, maintenance_silenced: next } : i)));
+    setItems((prev) => (prev || []).map((i) => i.id === item.id ? { ...i, maintenance_silenced: next } : i));
     try {
       await base44.entities.CatalogItem.update(item.id, { maintenance_silenced: next });
       toast({ title: next ? "Reminders silenced" : "Reminders resumed" });
     } catch (err) {
-      setItems((prev) => (prev || []).map((i) => (i.id === item.id ? { ...i, maintenance_silenced: !next } : i)));
+      setItems((prev) => (prev || []).map((i) => i.id === item.id ? { ...i, maintenance_silenced: !next } : i));
       toast({
         title: "Could not update",
         description: err.response?.data?.error || err.message,
@@ -112,7 +112,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-primary shrink-0">
-              <img src="https://media.base44.com/images/public/6aa405b709b2a9584afa1b84/4bb03db4b_app-logo-square.png" alt="PartsCatalog" className="w-full h-full object-cover" />
+              <img src="https://media.base44.com/images/public/6aa405b709b2a9584afa1b84/81ff63740_app-logo-square-2.png" alt="PartsCatalog" className="w-full h-full object-cover" />
             </div>
             <div className="leading-tight">
               <p className="font-semibold text-foreground">Product Catalog</p>
@@ -138,11 +138,11 @@ export default function Home() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-28 md:pb-12">
         {/* Maintenance due alert */}
-        {items && items.length > 0 && (
-          <div className="mb-6">
+        {items && items.length > 0 &&
+        <div className="mb-6">
             <MaintenanceDueBanner items={items} />
           </div>
-        )}
+        }
 
         {/* Hero / lookup */}
         <section className="mb-10">
@@ -200,10 +200,10 @@ export default function Home() {
 
           <PullToRefresh onRefresh={loadCatalog}>
               <CatalogGrid
-                items={items || []}
-                onDelete={handleDelete}
-                onToggleSilence={handleToggleSilence}
-                silencingId={silencingId} />
+              items={items || []}
+              onDelete={handleDelete}
+              onToggleSilence={handleToggleSilence}
+              silencingId={silencingId} />
             </PullToRefresh>
           }
         </section>
