@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
+import { saveAuthSnapshot, readAuthSnapshot, isOfflineError, clearOfflineCache } from '@/lib/offlineCache';
 
 const AuthContext = createContext();
 
@@ -28,7 +29,9 @@ export const AuthProvider = ({ children }) => {
         
         // If we got the app public settings successfully, check if user is authenticated
         if (appParams.token) {
-          await checkUserAuth();
+          const currentUser = await checkUserAuth();
+          // Remember the confirmed sign-in so the app can still open offline.
+          if (currentUser && typeof currentUser === 'object') saveAuthSnapshot(currentUser, publicSettings);
         } else {
           setIsLoadingAuth(false);
           setIsAuthenticated(false);
@@ -37,6 +40,19 @@ export const AuthProvider = ({ children }) => {
         setIsLoadingPublicSettings(false);
       } catch (appError) {
         console.error('App state check failed:', appError);
+
+        // No signal: keep the last confirmed sign-in so the saved catalog stays
+        // readable instead of dropping the user to the sign-in screen.
+        const snapshot = isOfflineError(appError) ? readAuthSnapshot() : null;
+        if (snapshot) {
+          setUser(snapshot.user);
+          setAppPublicSettings(snapshot.publicSettings || null);
+          setIsAuthenticated(true);
+          setAuthChecked(true);
+          setIsLoadingPublicSettings(false);
+          setIsLoadingAuth(false);
+          return;
+        }
         
         // Handle app-level errors
         if (appError.status === 403 && appError.data?.extra_data?.reason) {
@@ -86,9 +102,20 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
-      return true;
+      return currentUser;
     } catch (error) {
       console.error('User auth check failed:', error);
+
+      // No signal: the sign-in confirmed earlier on this device is still valid.
+      const snapshot = isOfflineError(error) ? readAuthSnapshot() : null;
+      if (snapshot) {
+        setUser(snapshot.user);
+        setIsAuthenticated(true);
+        setIsLoadingAuth(false);
+        setAuthChecked(true);
+        return snapshot.user;
+      }
+
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       setAuthChecked(true);
@@ -105,6 +132,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = (shouldRedirect = true) => {
+    // Signing out drops every copy this device saved for offline use.
+    clearOfflineCache();
     setUser(null);
     setIsAuthenticated(false);
     

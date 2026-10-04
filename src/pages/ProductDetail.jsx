@@ -10,9 +10,13 @@ import PullToRefresh from "@/components/PullToRefresh";
 import { isMaintenanceDueSoon } from "@/lib/maintenanceStatus";
 import WarrantyBadge from "@/components/WarrantyBadge";
 import { loadWarrantyStatuses } from "@/lib/warrantyStatus";
+import { readCachedCatalog } from "@/lib/offlineCache";
+import OfflineDataNotice from "@/components/OfflineDataNotice";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const goBack = () => {
     if (window.history.state?.idx > 0) navigate(-1);
@@ -23,11 +27,18 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [warrantyStatus, setWarrantyStatus] = useState(null);
+  const [savedCopy, setSavedCopy] = useState(null);
 
   const loadDetail = useCallback(async () => {
+    // The copy saved on this device already carries the product details and the
+    // warranty status for each catalog item, so it can stand in for both when
+    // there is no signal.
+    const cached = readCachedCatalog(user?.id);
+    const saved = (cached?.items || []).find((i) => i.id === id) || null;
     try {
       const record = await base44.entities.CatalogItem.get(id);
       setItem(record);
+      setSavedCopy(null);
       if (record?.serial_number) {
         // Warranty status belongs to the unit, so it is read from the serial
         // record rather than stored on the catalog item.
@@ -39,15 +50,24 @@ export default function ProductDetail() {
           const list = await base44.entities.Product.filter({ model_number: record.model_number }, "-updated_date", 1);
           setProduct(list && list.length > 0 ? list[0] : null);
         } catch {
-          setProduct(null);
+          // Keep the resources this device already has for the model.
+          setProduct(saved?.product || null);
+          if (saved) setSavedCopy(cached.savedAt);
         }
       }
     } catch (err) {
-      setNotFound(true);
+      if (saved) {
+        setItem(saved);
+        setProduct(saved.product || null);
+        setWarrantyStatus(saved.warranty_status || null);
+        setSavedCopy(cached.savedAt);
+      } else {
+        setNotFound(true);
+      }
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user?.id]);
 
   useEffect(() => {
     loadDetail();
@@ -94,6 +114,9 @@ export default function ProductDetail() {
 
       <PullToRefresh onRefresh={loadDetail}>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-12 space-y-6">
+        {/* Shown when this page is the copy saved on this device */}
+        {savedCopy && <OfflineDataNotice savedAt={savedCopy} onRetry={loadDetail} />}
+
         <div className="flex flex-col sm:flex-row gap-6">
           <div className="w-full sm:w-56 h-56 rounded-2xl bg-muted overflow-hidden shrink-0">
             {image ? (

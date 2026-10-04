@@ -12,6 +12,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 import NotificationBell from "@/components/NotificationBell";
 import { loadWarrantyStatuses } from "@/lib/warrantyStatus";
+import { saveCachedCatalog, readCachedCatalog } from "@/lib/offlineCache";
+import OfflineDataNotice from "@/components/OfflineDataNotice";
 
 export default function Home() {
   const { user } = useAuth();
@@ -20,6 +22,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState(() => searchParams.get("detail") ? "manual" : "serial");
   const [silencingId, setSilencingId] = useState(null);
+  const [savedCopy, setSavedCopy] = useState(null);
 
   const loadCatalog = useCallback(async () => {
     try {
@@ -34,17 +37,24 @@ export default function Home() {
       // Warranty status is tracked per unit (serial number), so it is looked up
       // from the serial records rather than stored on the catalog item.
       const warrantyMap = await loadWarrantyStatuses(list);
-      setItems(list.map((i) => ({
+      const joined = list.map((i) => ({
         ...i,
         product: productMap[i.model_number] || null,
         warranty_status: warrantyMap[i.serial_number] || null
-      })));
+      }));
+      setItems(joined);
+      setSavedCopy(null);
+      // Keep a copy on the device for the next time there is no signal.
+      saveCachedCatalog(user?.id, joined);
     } catch (err) {
-      setItems([]);
+      // No signal: fall back to the copy saved on this device's last good load.
+      const cached = readCachedCatalog(user?.id);
+      setItems(cached ? cached.items : []);
+      setSavedCopy(cached ? cached.savedAt : null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     loadCatalog();
@@ -137,6 +147,13 @@ export default function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-28 md:pb-12">
+        {/* Shown when the catalog on screen is the copy saved on this device */}
+        {savedCopy &&
+        <div className="mb-6">
+            <OfflineDataNotice savedAt={savedCopy} onRetry={loadCatalog} />
+          </div>
+        }
+
         {/* Maintenance due alert */}
         {items && items.length > 0 &&
         <div className="mb-6">
